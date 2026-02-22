@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HealthCare Chatbot</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="script.js"></script>
+
+  
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav>
+    <div class="logo">DiagnoLens🩺</div>
+    <div class="nav-links">
+      <a href="javascript:void(0)" onclick="showChooseScan()">Choose Scan Type</a>
+      <a href="javascript:void(0)" onclick="showVisualizeSection()">Visualize Abnormalities</a>
+      <a href="javascript:void(0)" onclick="showOCRSection()">Blood Report Reader via OCR</a>
+      <a href="javascript:void(0)" onclick="showConsultationSection()">Schedule Your Consultation</a>
+      <a href="#profile">Profile</a>
+      
+    </div>
+    <div class="auth-button">
+      <button class="login-btn" onclick="showLogin()">Login</button>
+      <button class="signup-btn" onclick="showSignup()">Sign Up</button>
+    </div>
+  </nav>
+
+  <!-- Title / Animation -->
+  <div class="container">
+    <div class="animated-section-wrapper" id="title-container">
+      <div class="title-container">
+        <h1 class="title">
+          <span class="letter">D</span>
+          <span class="letter">i</span>
+          <span class="letter">a</span>
+          <span class="letter">g</span>
+          <span class="letter">n</span>
+          <span class="letter">o</span>
+          <span class="letter">L</span>
+          <span class="letter">e</span>
+          <span class="letter">n</span>
+          <span class="letter">s</span>
+          <span class="letter">🩺</span>
+               </h1>
+        <p class="tagline">Diagnosis Through a Lens — Scans Analyzed by AI</p>
+        <div class="container-buttons">
+          <button class="primary-btn">🩸Find or Donate Blood</button>
+          <button class="secondary-btn">AI-Powered Prescription Reader</button>
+        </div>
+      </div>
+    </div>
+
+    
+    <!-- Login Form -->
+    <div id="auth-container">
+      <h2 class="signup-heading">Welcome to DiagnoLens🩺</h2>
+      <div class="auth-form">
+        <h2>Login</h2>
+        <input type="text" placeholder="Username">
+        <input type="password" placeholder="Password">
+        <button class="auth-btn" onclick="alert('Login successful (mock)')">Login</button>
+      </div>
+      <p class="help-register" onclick="alert('Redirecting to help page for registration')">Already have an account? </p>
+      <p>Help me Register!<a href="#" class="signup-link" onclick="alert('Redirecting to signup page')">Sign Up</a></p>
+    </div>
+
+    <!-- Sign Up Form -->
+    <div id="signup-container" style="display: none;">
+      <h2 class="signup-heading">Create Your Account</h2>
+      <div class="auth-form">
+        <h2>Sign Up</h2>
+        <input type="text" placeholder="Full Name">
+        <input type="email" placeholder="Email Address">
+        <input type="password" placeholder="Create Password">
+        <input type="password" placeholder="Confirm Password">
+        <button class="auth-btn" onclick="alert('Account created successfully (mock)')">Sign Up</button>
+      </div>
+      <p class="help-register" onclick="goBack()">Already have an account? Login here</p>
+    </div>
+  </div>
+
+  <!-- Sections for Navigation -->
+   <div id="info-section"><div class="feature-wrapper">
+    <div class="feature-content"><h1 class="section-heading">See Beyond the Scan </h1><p>"Empowering diagnosis with AI-driven clarity and confidence",We help doctors and patients make better decisions by using AI to clearly understand medical scans and reports.</p></div>
+  <div id="main-sections" class="navigation-section">
+    <div id="feature1" class="section"><h2>Multi-Modal analysis</h2><i class="fa-solid fa-dna"></i><p>Combine image + text (scan + prescription) for deeper AI insights.</p></div>
+    <div id="feature2" class="section"><h2>AI Symptom Checker</h2><i class="fa-solid fa-brain"></i><p>Let users describe symptoms via text or voice, then show potential causes.</p></div>
+    <div id="feature3" class="section"><h2>Report Summariser</h2><i class="fa-solid fa-file"></i><p>Convert clinical terms into simple language for non-medical users.</p></div>
+  </div>
+  </div>
+  <!--HOW IT WORK-->
+  <div class="Working">
+  <div class="content">
+    <h1 class="heading">How it works?</h1>
+    <p>DiagnoLens 🩺 started with analysing scans. Follow these steps to move forward:</p>
+    
+    <div class="steps">
+      <div class="step">
+        <div class="step-icon">1</div>
+        <h3>Create Your Profile</h3>
+        <p>Sign up and fill in your skills, interests, availability, and preferred location for diagnosis.</p>
+      </div>
+      
+      <div class="step">
+        <div class="step-icon">2</div>
+        <h3>Upload Scans</h3>
+        <p>Upload your medical scans (X-Ray, CT, MRI) securely to get AI-based analysis.</p>
+      </div>
+      
+      <div class="step">
+        <div class="step-icon">3</div>
+        <h3>Get AI Report</h3>
+        <p>Receive summarized and structured medical reports with risk insights and doctor suggestions.</p>
+      </div>
+      
+      <div class="step">
+        <div class="step-icon">4</div>
+        <h3>Track & Share</h3>
+        <p>Track your reports and share them securely with healthcare providers.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+   
+<!-- Choose Your Scan Section -->
+<div id="choose-scan-section" style="display: none;" class="choose-scan-wrapper">
+  <h1 class="section-heading1">Choose Your Scan</h1>
+  <p class="section-subtitle">Select the type of scan you'd like to upload and analyze</p>
+  <div class="scan-grid">
+    <!-- X-Ray Card -->
+    <div class="scan-card">
+      <i class="fas fa-x-ray scan-icon"></i>
+      <h3>X-Ray</h3>
+      <p>Upload chest, dental, or limb X-rays for instant analysis.</p>
+      <button class="scan-upload-btn">Upload X-Ray</button>
+    </div>
+    <!-- MRI Card -->
+    <div class="scan-card">
+      <i class="fas fa-brain scan-icon"></i>
+      <h3>MRI</h3>
+      <p>Analyze brain, spine, or joint MRI scans with AI insights.</p>
+      <button class="scan-upload-btn">Upload MRI</button>
+    </div>
+    <!-- CT Scan Card -->
+    <div class="scan-card">
+      <i class="fas fa-heartbeat scan-icon"></i>
+      <h3>CT Scan</h3>
+      <p>Upload CT scans to detect abnormalities quickly.</p>
+      <button class="scan-upload-btn">Upload CT Scan</button>
+    </div>
+  </div>
+</div>
+
+
+<div id="analysis-section" style="display: none;"></div>
+<!-- BLOOD REPORT VIA OCR -->
+ <section id="ocr-section" class="ocr-wrapper" style="display: none;">
+  <div class="ocr-inner-container">
+    <h2 class="section-heading1">Blood Report Reader via OCR</h2>
+    <p class="section-subtitle1">Upload scanned or digital reports to extract and analyze key medical data.</p>
+
+    <div class="scan-card1">
+      <i class="fas fa-tint scan-icon"></i>
+      <h3>Blood Report (OCR)</h3>
+      <p>Upload a photo or scanned copy of your blood report for AI-based analysis.</p>
+
+      <label for="ocrFile" class="custom-file-upload">
+        <i class="fas fa-file-upload"></i> Choose Blood Report File
+        <input type="file" id="ocrFile" accept=".jpg,.jpeg,.png,.pdf" />
+      </label>
+
+      <button class="scan-upload-btn" onclick="handleOCR()">Analyze Report</button>
+    </div>
+  </div>
+</section>
+
+<!-- Visualise Abnormalities-->
+
+<section id="visualize-section" class="visualize-wrapper" style="display: none;">
+  <h2 class="section-heading">Visualize Abnormalities</h2>
+  <p class="section-subtitle">Upload a scan to view AI-highlighted abnormal regions.</p>
+
+  <div class="visualize-content">
+    
+    <div class="upload-box">
+      <label for="scanFile" class="custom-upload">
+        <i class="fas fa-upload"></i> Upload Scan Image
+        <input type="file" id="scanFile" accept=".jpg,.jpeg,.png" onchange="previewScan()" />
+      </label>
+      <i class="fa-solid fa-notes-medical"></i>
+
+      <p class="note">Supported formats: JPG, PNG (Max 5MB)</p>
+      <button class="analyze-btn" onclick="analyzeScan()">Analyze & Highlight</button>
+    </div>
+
+    <!-- Group preview and doctor portrait side by side -->
+   <div class="scan-preview-box">
+      <h2>Scan Preview:</h2>
+      <div class="scan-container">
+        <img id="scanPreview" src="" alt="Uploaded Scan" />
+        <canvas id="highlightCanvas"></canvas>
+      </div>
+    
+          <div class="floating-doctor">
+             <img src="image3.png" alt="Doctor Image" />
+          </div>
+       
+
+
+   </div>
+  
+  </div>
+
+
+  <!-- Output Summary Box (Initially Empty) -->
+<div class="ai-output-box" id="ai-output-box">
+  <h2>Description For Highlighted Area:</h2>
+  <div id="output-content">
+    <p id="typing-placeholder" class="placeholder-text"></p>
+  </div>
+</div>
+</section>
+
+<!--Book your Consultation-->
+
+<section class="consultation-section" id="consultation-section" style="display: none;">
+  <h2 class="section-title">Schedule Your Consultation</h2>
+  <p class="section-subtitle">Search for the right doctor based on your needs and connect instantly.</p>
+
+  <!-- Search Filters -->
+  <!-- Search Filters -->
+<div class="search-filters">
+  
+  <div class="filter-input">
+    <i class="fa-solid fa-location-dot"></i>
+    <input type="text" placeholder="Cities..." />
+  </div>
+
+  <div class="filter-input">
+    <i class="fa-solid fa-user-doctor"></i>
+    <input type="text" placeholder="Doctor Name..." />
+  </div>
+  <div class="filter-input">
+    <i class="fa-solid fa-virus"></i>
+    <input type="text" placeholder="Disease..." />
+  </div>
+  <div class="filter-input">
+    <i class="fa-solid fa-stethoscope"></i>
+    <input type="text" placeholder="Body Part / Expertise..." />
+  </div>
+  <button class="filter-btn"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+</div>
+
+
+  <!-- Doctor Cards -->
+  <div class="doctor-cards">
+    <!-- Card 1 -->
+    <div class="doctor-card">
+      <img src="https://lyfboat-os.s3.fr-par.scw.cloud/uploads/doctors/5-profile-dr-manjinder-sandhu.jpg" alt="Doctor">
+      <h3>Dr. Manjinder Singh Sandhu</h3>
+      <p><strong>Specialty:</strong> Cardiologist</p>
+      <p><strong>Experience:</strong> 30+ years</p>
+      <p><strong>Location:</strong> Delhi</p>
+      <p><strong>Expertise:</strong>Implants For Heart Failure</p>
+      <button class="connect-btn">Connect with them</button>
+    </div>
+
+    <!-- Repeat 3 more cards -->
+    <div class="doctor-card">
+      <img src="https://lyfboat-os.s3.fr-par.scw.cloud/lyfboat/uploads/doctors/4-rakesh-profile-9.jpg" alt="Doctor">
+      <h3>Dr. Rakesh Chopra</h3>
+      <p><strong>Specialty:</strong> Hematologist</p>
+      <p><strong>Experience:</strong> 9+ years</p>
+      <p><strong>Location:</strong> Mumbai</p>
+      <p><strong>Expertise:</strong>Bone marrow and lymphatic system</p>
+      <button class="connect-btn">Connect with them</button>
+    </div>
+
+    <div class="doctor-card">
+      <img src="https://lyfboat-os.s3.fr-par.scw.cloud/lyfboat/uploads/doctors/1487-profile-anil_kumar_kansal.jpg" alt="Doctor">
+      <h3>Dr. Anil Kumar Kansal</h3>
+      <p><strong>Specialty:</strong> Neurologist</p>
+      <p><strong>Experience:</strong> 15+ years</p>
+      <p><strong>Location:</strong> Bengaluru</p>
+      <p><strong>Expertise:</strong>  Brain, spinal cord, nerves, and muscles</p>
+      <button class="connect-btn">Connect with them</button>
+    </div>
+
+    <div class="doctor-card">
+      <img src="https://lyfboat-os.s3.fr-par.scw.cloud/uploads/doctors/1990-profile-untitled-4.jpg" alt="Doctor">
+      <h3>Dr. Manoj Johar</h3>
+      <p><strong>Specialty:</strong> Plastic & Reconstructive Surgeon</p>
+      <p><strong>Experience:</strong> 28+ years</p>
+      <p><strong>Location:</strong> Kolkata</p>
+      <p><strong>Expertise:</strong> Plastic Surgery</p>
+      <button class="connect-btn">Connect with them</button>
+    </div>
+
+
+
+    <!-- Card 1 -->
+    <div class="doctor-card">
+      <img src="https://lyfboat-os.s3.fr-par.scw.cloud/lyfboat/uploads/doctors/9-aditya-profile-108.jpg" alt="Doctor">
+      <h3>Dr. Aditya Pradhan</h3>
+      <p><strong>Specialty:</strong> Urologist</p>
+      <p><strong>Experience:</strong> 30+ years</p>
+      <p><strong>Location:</strong> New Delhi</p>
+      <p><strong>Expertise:</strong> Bladder, Urethra, Ureters</p>
+      <button class="connect-btn">Connect with them</button>
+    </div>
+    
+
+    <!-- Repeat 3 more cards -->
+    <div class="doctor-card">
+      <img src="https://lyfboat-os.s3.fr-par.scw.cloud/lyfboat/uploads/doctors/4-hitesh-profile-19.jpg" alt="Doctor">
+      <h3>Dr. Hitesh Garg</h3>
+      <p><strong>Specialty:</strong> </p>
+      <p><strong>Experience:</strong> 9+ years</p>
+      <p><strong>Location:</strong> Gurgaon</p>
+      <p><strong>Expertise:</strong>Spinal Surgery</p>
+      <button class="connect-btn">Connect with them</button>
+    </div>
+
+    <div class="doctor-card">
+      <img src="https://lyfboat-os.s3.fr-par.scw.cloud/lyfboat/uploads/doctors/4-harsha-profile-22.jpg" alt="Doctor">
+      <h3>Dr. Harsha Jauhari</h3>
+      <p><strong>Specialty:</strong> Nephrologist</p>
+      <p><strong>Experience:</strong> 15+ years</p>
+      <p><strong>Location:</strong> Gurgaon</p>
+      <p><strong>Expertise:</strong>  Kidneys or Kidney functions </p>
+      <button class="connect-btn">Connect with them</button>
+    </div>
+
+    <div class="doctor-card">
+      <img src="https://lyfboat-os.s3.fr-par.scw.cloud/lyfboat/uploads/doctors/4-shashi-profile-25.jpg" alt="Doctor">
+      <h3>Dr. Shashi Dhar</h3>
+      <p><strong>Specialty:</strong> Ear Nose & Throat</p>
+      <p><strong>Experience:</strong> 12+ years</p>
+      <p><strong>Location:</strong> Gurgaon</p>
+      <p><strong>Expertise:</strong> ENT</p>
+      <button class="connect-btn">Connect with them</button>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
+ 
