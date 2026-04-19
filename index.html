@@ -1,126 +1,708 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>HealthCare Chatbot</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <script src="script.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DiagnoLens — Smart Hospital Care</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-  <!-- Navigation Bar -->
-  <nav>
-    <div class="logo">DiagnoLens🩺</div>
-    <div class="nav-links">
-      <a href="javascript:void(0)" onclick="showChooseScan()">Choose Scan Type</a>
-      <a href="javascript:void(0)" onclick="showVisualizeSection()">Visualize Abnormalities</a>
-      <a href="javascript:void(0)" onclick="showOCRSection()">Blood Report Reader via OCR</a>
-      <a href="javascript:void(0)" onclick="showConsultationSection()">Schedule Your Consultation</a>
-      <a href="#profile">Profile</a>
+<!-- ═══════════════════════ NAV ══════════════════════════════ -->
+<nav>
+  <div class="nav-logo" onclick="goHome()">
+    <span class="dot"></span>DiagnoLens
+  </div>
+  <!-- Feature links — shown after patient login only -->
+  <div class="nav-links" id="nav-feature-links" style="display:none">
+    <button class="nav-link" onclick="navGoTo('page-queue')">📊 Live Queue</button>
+    <button class="nav-link" onclick="navGoTo('page-whatsapp')">📱 WhatsApp Alerts</button>
+    <button class="nav-link" onclick="navGoTo('page-video')">📹 Video Consult</button>
+  </div>
+  <div class="nav-right">
+    <button class="nav-link cta" id="nav-book-btn" onclick="navBookAppointment()">📅 Book Appointment</button>
+    <span class="nav-tag" id="nav-role-tag" style="display:none"></span>
+    <div class="nav-user" id="nav-user">
+      <div class="nav-avatar" id="nav-avatar">?</div>
+      <span id="nav-name">User</span>
     </div>
-    <div class="auth-button">
-      <button class="login-btn" onclick="showLogin()">Login</button>
-      <button class="signup-btn" onclick="showSignup()">Sign Up</button>
+    <button class="btn-logout" id="btn-logout" style="display:none" onclick="doLogout()">Sign out</button>
+  </div>
+</nav>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════ BOOKING SUCCESS MODAL ═══════════════════ -->
+<div class="modal-overlay" id="modal-success">
+  <div class="modal">
+    <div class="modal-icon">✅</div>
+    <h3>Appointment Booked!</h3>
+    <p>Your appointment is confirmed. Your token:</p>
+    <div class="modal-token" id="modal-token-code">—</div>
+    <p id="modal-token-details" style="font-size:12px;color:var(--muted)"></p>
+    <div class="qr-wrap">
+      <div id="qr-container"></div>
+      <div class="qr-note">📲 Show this QR at the OPD counter</div>
     </div>
-  </nav>
-
-  <!-- Title / Animation -->
-  <div class="container">
-    <div class="animated-section-wrapper" id="title-container">
-      <div class="title-container">
-        <h1 class="title">
-          <span class="letter">D</span>
-          <span class="letter">i</span>
-          <span class="letter">a</span>
-          <span class="letter">g</span>
-          <span class="letter">n</span>
-          <span class="letter">o</span>
-          <span class="letter">L</span>
-          <span class="letter">e</span>
-          <span class="letter">n</span>
-          <span class="letter">s</span>
-          <span class="letter">🩺</span>
-        </h1>
-        <p class="tagline">Diagnosis Through a Lens — Scans Analyzed by AI</p>
-        <div class="container-buttons">
-          <button class="primary-btn">🩸Find or Donate Blood</button>
-          <button class="secondary-btn">AI-Powered Prescription Reader</button>
-        </div>
-      </div>
+    <div class="qr-actions">
+      <button class="whatsapp-send-btn" id="wa-send-qr-btn" style="display:none">📱 Send to WhatsApp</button>
+      <button class="btn-secondary" onclick="closeModal()" style="padding:10px 20px;font-size:13px">Close</button>
     </div>
+    <button class="btn-full" style="margin-top:14px" onclick="closeModal()">View My Appointments</button>
+  </div>
+</div>
 
-    <!-- Sections for Navigation -->
-    <div id="info-section">
-      <div class="feature-wrapper">
-        <div class="feature-content">
-          <h1 class="section-heading">See Beyond the Scan</h1>
-          <p>
-            "Empowering diagnosis with AI-driven clarity and confidence",
-            We help doctors and patients make better decisions by using AI to clearly understand medical scans and reports.
-          </p>
-        </div>
-
-        <div id="main-sections" class="navigation-section">
-          <div id="feature1" class="section">
-            <h2>Multi-Modal analysis</h2>
-            <i class="fa-solid fa-dna"></i>
-            <p>Combine image + text (scan + prescription) for deeper AI insights.</p>
-          </div>
-
-          <div id="feature2" class="section">
-            <h2>AI Symptom Checker</h2>
-            <i class="fa-solid fa-brain"></i>
-            <p>Let users describe symptoms via text or voice, then show potential causes.</p>
-          </div>
-
-          <div id="feature3" class="section">
-            <h2>Report Summariser</h2>
-            <i class="fa-solid fa-file"></i>
-            <p>Convert clinical terms into simple language for non-medical users.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- HOW IT WORKS -->
-      <div class="Working">
-        <div class="content">
-          <h1 class="heading">How it works?</h1>
-          <p>DiagnoLens 🩺 started with analysing scans. Follow these steps to move forward:</p>
-
-          <div class="steps">
-            <div class="step">
-              <div class="step-icon">1</div>
-              <h3>Create Your Profile</h3>
-              <p>Sign up and fill in your skills, interests, availability, and preferred location for diagnosis.</p>
-            </div>
-
-            <div class="step">
-              <div class="step-icon">2</div>
-              <h3>Upload Scans</h3>
-              <p>Upload your medical scans (X-Ray, CT, MRI) securely to get AI-based analysis.</p>
-            </div>
-
-            <div class="step">
-              <div class="step-icon">3</div>
-              <h3>Get AI Report</h3>
-              <p>Receive summarized and structured medical reports with risk insights and doctor suggestions.</p>
-            </div>
-
-            <div class="step">
-              <div class="step-icon">4</div>
-              <h3>Track & Share</h3>
-              <p>Track your reports and share them securely with healthcare providers.</p>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
+<!-- ═══════════════ CANCEL CONFIRM MODAL ════════════════════ -->
+<div class="modal-overlay" id="modal-cancel">
+  <div class="modal">
+    <div class="modal-icon" style="background:rgba(225,29,72,.1)">⚠️</div>
+    <h3>Cancel Appointment?</h3>
+    <p>You are about to cancel:</p>
+    <div class="modal-token" id="cancel-token-display" style="font-size:17px;color:var(--rose)">—</div>
+    <p id="cancel-details" style="font-size:12px;color:var(--muted);margin-bottom:16px"></p>
+    <p style="font-size:13px;color:var(--rose);font-weight:600">This cannot be undone.</p>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap">
+      <button class="btn-rose" onclick="confirmCancelAppt()">Yes, Cancel It</button>
+      <button class="btn-secondary" onclick="closeCancelModal()" style="padding:10px 20px;font-size:13px">Keep Appointment</button>
     </div>
   </div>
+</div>
 
+<!-- ═══════════════════ PAGE: LANDING ═══════════════════════ -->
+<div class="page" id="page-landing">
+  <div class="landing-bg">
+    <div class="landing-bg-circle"></div>
+    <div class="landing-bg-circle"></div>
+    <div class="landing-bg-circle"></div>
+  </div>
+  <div class="landing-content">
+    <div class="landing-eyebrow">Smart Healthcare Platform</div>
+    <h1 class="landing-h1">Your hospital, <em>smarter</em></h1>
+    <p class="landing-sub">Book OPD appointments, track your live queue position, consult doctors over video, and get WhatsApp reminders — all in one place.</p>
+    <div class="feat-grid">
+      <div class="feat-card" onclick="goToAuth('patient')"><div class="feat-icon">📅</div><div class="feat-title">Book OPD Slot</div><div class="feat-sub">50+ hospitals, 12 cities</div></div>
+      <div class="feat-card" onclick="goToAuth('patient')"><div class="feat-icon">📊</div><div class="feat-title">Live Queue</div><div class="feat-sub">Real-time position</div></div>
+      <div class="feat-card" onclick="goToAuth('patient')"><div class="feat-icon">📱</div><div class="feat-title">WhatsApp Alerts</div><div class="feat-sub">Booking on your phone</div></div>
+      <div class="feat-card" onclick="goToAuth('patient')"><div class="feat-icon">📹</div><div class="feat-title">Video Consult</div><div class="feat-sub">Talk to a doctor now</div></div>
+    </div>
+    <div class="landing-ctas">
+      <button class="btn-primary" onclick="goToAuth('patient')">🏥 Get Started</button>
+      <button class="btn-secondary" onclick="goToAuth('admin')">🔐 Hospital Admin</button>
+    </div>
+    <div class="landing-stats">
+      <div class="stat-item"><div class="stat-num">12+</div><div class="stat-label">Cities</div></div>
+      <div class="stat-item"><div class="stat-num">50+</div><div class="stat-label">Hospitals</div></div>
+      <div class="stat-item"><div class="stat-num">24/7</div><div class="stat-label">Available</div></div>
+      <div class="stat-item"><div class="stat-num">QR</div><div class="stat-label">Instant Token</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE: AUTH ══════════════════════════ -->
+<div class="page" id="page-auth">
+  <div class="auth-split">
+    <div class="auth-left">
+      <div class="auth-left-content">
+        <h2>Healthcare at your fingertips</h2>
+        <p>Your account is securely protected. Sign in to access all DiagnoLens features.</p>
+        <div class="auth-features">
+          <div class="auth-feat"><div class="auth-feat-icon">🔐</div><div class="auth-feat-text"><strong>Secure Login</strong><span>Your data is always protected</span></div></div>
+          <div class="auth-feat"><div class="auth-feat-icon">📅</div><div class="auth-feat-text"><strong>Instant Booking</strong><span>Book OPD slots in seconds</span></div></div>
+          <div class="auth-feat"><div class="auth-feat-icon">📱</div><div class="auth-feat-text"><strong>QR + WhatsApp</strong><span>Booking confirmation on your phone</span></div></div>
+          <div class="auth-feat"><div class="auth-feat-icon">📹</div><div class="auth-feat-text"><strong>Video Consult</strong><span>Talk to doctors instantly</span></div></div>
+        </div>
+        <div class="auth-feat" style="margin-top:24px;background:rgba(37,99,235,.08);border-radius:12px;padding:14px 16px;border:1px solid rgba(37,99,235,.15)">
+          <div class="auth-feat-icon">🏥</div>
+          <div class="auth-feat-text"><strong>50+ Hospitals</strong><span>Across 12 cities in India</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="auth-right">
+      <div class="auth-box">
+        <h3 id="auth-heading">Welcome back</h3>
+        <p id="auth-subhead">Sign in to your account</p>
+        <div class="role-tabs">
+          <button class="role-tab active" onclick="switchRole('patient')" id="tab-patient">👤 Patient</button>
+          <button class="role-tab" onclick="switchRole('admin')" id="tab-admin">🏥 Admin</button>
+        </div>
+
+        <!-- Admin credential hint — only shown when admin tab is active -->
+        <div id="admin-cred-hint" class="admin-cred-hint" style="display:none">
+          <div class="admin-cred-icon">🔐</div>
+          <div class="admin-cred-body">
+            <div class="admin-cred-title">Admin Login Credentials</div>
+            <div class="admin-cred-row">Email: <code>admin@diagnolens.com</code></div>
+            <div class="admin-cred-row">Password: <code>Admin@123</code></div>
+          </div>
+        </div>
+
+        <div id="auth-error" class="auth-error"></div>
+
+        <!-- LOGIN -->
+        <div id="form-login">
+          <div class="form-group">
+            <label>Email address</label>
+            <input type="email" id="login-email" placeholder="you@email.com">
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="login-password" placeholder="Enter your password">
+          </div>
+          <button class="btn-full" onclick="doLogin()">Sign in →</button>
+          <div class="auth-switch">Don't have an account? <a onclick="switchForm('register')">Register</a></div>
+        </div>
+
+        <!-- REGISTER -->
+        <div id="form-register" style="display:none">
+          <div class="form-row">
+            <div class="form-group"><label>First Name</label><input type="text" id="reg-fname" placeholder="Arjun"></div>
+            <div class="form-group"><label>Last Name</label><input type="text" id="reg-lname" placeholder="Sharma"></div>
+          </div>
+          <div class="form-group"><label>Email</label><input type="email" id="reg-email" placeholder="you@email.com"></div>
+          <div class="form-group">
+            <label>Phone Number <span style="color:var(--rose)">*</span> <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px">(WhatsApp alerts sent here)</span></label>
+            <input type="tel" id="reg-phone" placeholder="+91 98765 43210">
+          </div>
+          <div class="form-group" id="reg-hospital-group" style="display:none">
+            <label>Hospital Name</label>
+            <input type="text" id="reg-hospital" placeholder="e.g. Fortis Hospital Delhi">
+          </div>
+          <div class="form-group"><label>Password</label><input type="password" id="reg-password" placeholder="Min. 6 characters"></div>
+          <button class="btn-full" onclick="doRegister()">Create Account →</button>
+          <div class="auth-switch">Already registered? <a onclick="switchForm('login')">Sign in</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: PATIENT DASHBOARD ═════════════════ -->
+<div class="page" id="page-patient">
+  <div class="dash-wrap">
+    <div class="dash-header">
+      <div>
+        <div class="dash-greeting">Hello, <span id="patient-name">there</span> 👋</div>
+        <div class="dash-subtitle">Book and manage your hospital appointments</div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn-accent" onclick="showBookingForm()">+ New Appointment</button>
+        <button class="btn-secondary" style="padding:10px 18px;font-size:13px" onclick="navGoTo('page-video')">📹 Video Consult</button>
+        <button class="btn-secondary" style="padding:10px 18px;font-size:13px" onclick="navGoTo('page-queue')">📊 Track Queue</button>
+      </div>
+    </div>
+
+    <!-- BOOKING FORM -->
+    <div id="booking-section" style="display:none">
+      <div class="form-card">
+        <h3>📅 Book an Appointment</h3>
+        <div class="steps">
+          <div class="step"><div class="step-num active" id="sn1">1</div><div class="step-label active">Location</div></div>
+          <div class="step-sep"></div>
+          <div class="step"><div class="step-num" id="sn2">2</div><div class="step-label">Hospital</div></div>
+          <div class="step-sep"></div>
+          <div class="step"><div class="step-num" id="sn3">3</div><div class="step-label">Department</div></div>
+          <div class="step-sep"></div>
+          <div class="step"><div class="step-num" id="sn4">4</div><div class="step-label">Date &amp; Slot</div></div>
+        </div>
+        <div id="step1">
+          <div class="form-group"><label>Select Your City</label><select id="sel-city" onchange="onCityChange()"><option value="">— Choose a city —</option></select></div>
+        </div>
+        <div id="step2" style="display:none">
+          <div class="form-group"><label>Select Hospital</label><select id="sel-hospital" onchange="onHospitalChange()"><option value="">— Choose a hospital —</option></select></div>
+        </div>
+        <div id="step3" style="display:none">
+          <div class="form-group"><label>Select Department</label><select id="sel-dept" onchange="onDeptChange()"><option value="">— Choose a department —</option></select></div>
+        </div>
+        <div id="step4" style="display:none">
+          <div class="form-row">
+            <div class="form-group"><label>Select Date</label><input type="date" id="sel-date" onchange="onDateChange()"></div>
+            <div class="form-group"><label>Patient Name</label><input type="text" id="appt-patient-name" placeholder="Full name"></div>
+          </div>
+          <div class="form-group"><label>Available Time Slots</label><div class="slots-grid" id="slots-grid"></div></div>
+          <div style="margin-top:22px;display:flex;gap:11px;flex-wrap:wrap">
+            <button class="btn-primary" onclick="confirmBooking()">Confirm Booking 🎫</button>
+            <button class="btn-secondary" onclick="cancelBookingForm()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MY APPOINTMENTS -->
+    <div class="section-title">My Appointments</div>
+    <div class="filter-bar" style="margin-bottom:18px">
+      <button class="filter-btn active" onclick="filterAppts('all',this)">All</button>
+      <button class="filter-btn" onclick="filterAppts('upcoming',this)">Upcoming</button>
+      <button class="filter-btn" onclick="filterAppts('done',this)">Completed</button>
+    </div>
+    <div class="appt-list" id="patient-appt-list">
+      <div class="empty"><div class="empty-icon">📋</div><h4>No appointments yet</h4><p>Book your first appointment above</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE: ADMIN ═════════════════════════ -->
+<div class="page" id="page-admin">
+  <div class="dash-wrap">
+    <div class="dash-header">
+      <div>
+        <div class="dash-greeting">Admin Dashboard <span id="admin-hosp-name"></span></div>
+        <div class="dash-subtitle">All patient data, appointments and member records in one place</div>
+      </div>
+    </div>
+
+    <!-- Stats grid — 5 cards including registered members -->
+    <div class="admin-grid">
+      <div class="admin-stat blue"><div class="admin-stat-num" id="stat-total">0</div><div class="admin-stat-label">Total Bookings</div></div>
+      <div class="admin-stat green"><div class="admin-stat-num" id="stat-today">0</div><div class="admin-stat-label">Today</div></div>
+      <div class="admin-stat amber"><div class="admin-stat-num" id="stat-upcoming">0</div><div class="admin-stat-label">Upcoming</div></div>
+      <div class="admin-stat rose"><div class="admin-stat-num" id="stat-depts">0</div><div class="admin-stat-label">Departments Active</div></div>
+      <div class="admin-stat purple"><div class="admin-stat-num" id="stat-members">0</div><div class="admin-stat-label">Registered Members</div></div>
+    </div>
+
+    <!-- Tabs: Appointments / Today / All Members / WhatsApp / Google Sheets / Voice Agent -->
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="adminTab('appointments',this)">📋 All Appointments</button>
+      <button class="admin-tab" onclick="adminTab('today',this)">📅 Today</button>
+      <button class="admin-tab" onclick="adminTab('members',this)">👥 All Members</button>
+      <button class="admin-tab" onclick="adminTab('whatsapp',this)">📱 WhatsApp / SMS</button>
+      <button class="admin-tab" onclick="adminTab('sheets',this)">📊 Google Sheets</button>
+      <button class="admin-tab" onclick="adminTab('voice',this)">🎙️ Voice Agent</button>
+    </div>
+
+    <!-- DATA TABLE — shown for appointments / today / members tabs -->
+    <div id="admin-table-wrap" class="table-wrap">
+      <div class="table-head">
+        <h3 id="admin-table-title">All Appointments</h3>
+        <input type="text" id="admin-search"
+          placeholder="Search patient, token, phone…"
+          style="padding:7px 13px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:230px"
+          oninput="adminRender()">
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead id="admin-table-head">
+            <tr>
+              <th>Token</th><th>Patient</th><th>Phone</th><th>Hospital</th>
+              <th>Dept</th><th>Date</th><th>Time</th><th>Status</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="admin-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══════════ ADMIN WHATSAPP / SMS PANEL ════════════════ -->
+    <div id="admin-wa-section" style="display:none">
+      <div class="voice-hero" style="background:linear-gradient(135deg,#075e54,#128c7e)">
+        <div class="voice-hero-icon">📱</div>
+        <div>
+          <h2>WhatsApp &amp; SMS — Admin Panel</h2>
+          <p>Send booking confirmations, reminders, and alerts to patients directly from here.</p>
+        </div>
+      </div>
+
+      <!-- Send WhatsApp to individual patient -->
+      <div class="form-card" id="admin-wa-panel">
+        <h3 style="margin-bottom:18px">📲 Send WhatsApp Message</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Patient Phone Number <span style="color:var(--rose)">*</span></label>
+            <input type="tel" id="admin-wa-phone" placeholder="+91 98765 43210">
+          </div>
+          <div class="form-group">
+            <label>Patient Name</label>
+            <input type="text" id="admin-wa-name" placeholder="Arjun Sharma">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Token / Appointment ID</label>
+          <input type="text" id="admin-wa-token" placeholder="e.g. FOR-CAR-001">
+        </div>
+        <div class="form-group">
+          <label>Quick Templates</label>
+          <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px">
+            <button class="admin-wa-tpl-btn" onclick="setWaTpl('booking')">✅ Slot Booked</button>
+            <button class="admin-wa-tpl-btn" onclick="setWaTpl('reminder')">🔔 Reminder</button>
+            <button class="admin-wa-tpl-btn" onclick="setWaTpl('delay')">⏳ Delay Notice</button>
+            <button class="admin-wa-tpl-btn" onclick="setWaTpl('turn')">🔔 Your Turn</button>
+            <button class="admin-wa-tpl-btn" onclick="setWaTpl('cancel')">❌ Cancellation</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Message <span style="font-size:10px;font-weight:400;color:var(--muted)">(Use {name}, {token}, {date} as placeholders)</span></label>
+          <textarea id="admin-wa-msg" rows="5"
+            style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;resize:vertical;outline:none"
+            placeholder="Type your message or pick a template above…"></textarea>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn-green" onclick="adminDoSendWhatsApp()">📲 Send via WhatsApp</button>
+          <button class="btn-secondary" style="padding:10px 18px;font-size:13px" onclick="adminDoClearWaForm()">🗑 Clear</button>
+        </div>
+      </div>
+
+      <!-- Send SMS to individual patient -->
+      <div class="form-card" id="admin-sms-panel">
+        <h3 style="margin-bottom:18px">💬 Send SMS</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Patient Phone Number <span style="color:var(--rose)">*</span></label>
+            <input type="tel" id="admin-sms-phone" placeholder="+91 98765 43210">
+          </div>
+          <div class="form-group">
+            <label>Patient Name</label>
+            <input type="text" id="admin-sms-name" placeholder="Arjun Sharma">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Token / Appointment ID</label>
+          <input type="text" id="admin-sms-token" placeholder="e.g. FOR-CAR-001">
+        </div>
+        <div class="form-group">
+          <label>Quick Templates</label>
+          <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px">
+            <button class="admin-wa-tpl-btn" onclick="setSmsTpl('booking')">✅ Slot Booked</button>
+            <button class="admin-wa-tpl-btn" onclick="setSmsTpl('reminder')">🔔 Reminder</button>
+            <button class="admin-wa-tpl-btn" onclick="setSmsTpl('turn')">🔔 Your Turn</button>
+            <button class="admin-wa-tpl-btn" onclick="setSmsTpl('cancel')">❌ Cancellation</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>SMS Message <span style="font-size:10px;font-weight:400;color:var(--muted)">(Use {name}, {token}, {date} as placeholders)</span></label>
+          <textarea id="admin-sms-msg" rows="4"
+            style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;resize:vertical;outline:none"
+            placeholder="Type your SMS message or pick a template above…"></textarea>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <button style="padding:11px 22px;background:#2563eb;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif" onclick="adminDoSendSMS()">💬 Send SMS</button>
+          <button class="btn-secondary" style="padding:10px 18px;font-size:13px" onclick="adminDoClearSmsForm()">🗑 Clear</button>
+          <span style="font-size:12px;color:var(--muted)">Opens your default SMS app on mobile</span>
+        </div>
+      </div>
+
+      <!-- Quick-send all today's patients -->
+      <div class="form-card">
+        <h3 style="margin-bottom:14px">📋 Today's Patients — Quick Broadcast</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Click <strong>WA</strong> or <strong>SMS</strong> on any row to message that patient instantly.</p>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Token</th><th>Name</th><th>Phone</th><th>Hospital</th><th>Dept</th><th>Time</th><th>WhatsApp</th><th>SMS</th></tr></thead>
+            <tbody id="admin-wa-today-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ ADMIN GOOGLE SHEETS PANEL ════════════════ -->
+    <div id="admin-sheets-section" style="display:none">
+      <div class="voice-hero" style="background:linear-gradient(135deg,#1e6b3c,#34a853)">
+        <div class="voice-hero-icon">📊</div>
+        <div>
+          <h2>Google Sheets Integration</h2>
+          <p>Every new patient registration is automatically saved to your linked Google Sheet.</p>
+        </div>
+      </div>
+      <div class="form-card">
+        <h3 style="margin-bottom:16px">🔗 Your Google Sheet</h3>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div>
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px">Sheet URL</div>
+            <div id="sheets-url-display" style="font-size:13px;color:var(--accent);word-break:break-all">Not configured — see credentials.js</div>
+          </div>
+          <a id="sheets-open-link" href="#" target="_blank" class="btn-accent" style="font-size:13px;padding:9px 18px;text-decoration:none">📂 Open Sheet</a>
+        </div>
+        <h4 style="margin-bottom:10px;font-size:14px">📐 Column Structure (A → J)</h4>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Column</th><th>Data</th><th>Example</th></tr></thead>
+            <tbody>
+              <tr><td><strong>A</strong></td><td>Token Number</td><td>FOR-CAR-001</td></tr>
+              <tr><td><strong>B</strong></td><td>Patient Name</td><td>Arjun Sharma</td></tr>
+              <tr><td><strong>C</strong></td><td>Phone</td><td>+919876543210</td></tr>
+              <tr><td><strong>D</strong></td><td>Email</td><td>arjun@email.com</td></tr>
+              <tr><td><strong>E</strong></td><td>Hospital</td><td>Fortis Hospital</td></tr>
+              <tr><td><strong>F</strong></td><td>Department</td><td>Cardiology</td></tr>
+              <tr><td><strong>G</strong></td><td>City</td><td>Delhi</td></tr>
+              <tr><td><strong>H</strong></td><td>Date</td><td>2025-05-19</td></tr>
+              <tr><td><strong>I</strong></td><td>Time Slot</td><td>10:30</td></tr>
+              <tr><td><strong>J</strong></td><td>Booked At</td><td>19/05/2025, 09:14:32 AM</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:22px">
+          <h4 style="margin-bottom:12px;font-size:14px">⚙️ Setup Steps</h4>
+          <div class="voice-integration-info">
+            <div class="voice-int-step">
+              <div class="voice-int-num">1</div>
+              <div><strong>Create a Google Sheet</strong><span>Add headers in Row 1: Token | Name | Phone | Email | Hospital | Dept | City | Date | Slot | Booked At</span></div>
+            </div>
+            <div class="voice-int-step">
+              <div class="voice-int-num">2</div>
+              <div><strong>Create an Apps Script Web App</strong><span>In your Sheet → Extensions → Apps Script → paste the doPost() function from <code>credentials.js</code> → Deploy as Web App (Anyone can access) → copy the URL</span></div>
+            </div>
+            <div class="voice-int-step">
+              <div class="voice-int-num">3</div>
+              <div><strong>Paste the URL in script.js</strong><span>Open <code>script.js</code> → set <code>GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/…/exec'</code> at the top</span></div>
+            </div>
+            <div class="voice-int-step">
+              <div class="voice-int-num">4</div>
+              <div><strong>Done — no backend needed!</strong><span>Every new booking now auto-saves a row to your Google Sheet instantly, directly from the browser</span></div>
+            </div>
+          </div>
+          <div style="background:rgba(52,168,83,.06);border:1px solid rgba(52,168,83,.2);border-radius:12px;padding:14px 17px;margin-top:10px;font-size:13px;color:var(--muted)">
+            ✅ <strong>Auto-save is already wired in.</strong> Every booking calls <code>saveToGoogleSheets()</code> and <code>triggerMakeWebhook()</code> automatically. Just set your URL in <code>script.js</code> and it starts logging instantly — no Node.js server required.
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent local registrations -->
+      <div class="form-card">
+        <h3 style="margin-bottom:14px">🕓 Recent Registrations (Last 10)</h3>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Token</th><th>Name</th><th>Phone</th><th>Hospital</th><th>Date</th><th>Slot</th><th>Booked At</th></tr></thead>
+            <tbody id="sheets-recent-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ VOICE AGENT SECTION (admin only) ═══════════ -->
+    <div id="admin-voice-section" style="display:none">
+
+      <!-- Voice hero -->
+      <div class="voice-hero">
+        <div class="voice-hero-icon">🎙️</div>
+        <div>
+          <h2>Voice Agent Integration</h2>
+          <p>AI-powered outbound/inbound voice assistant for your patients. All registered member phone numbers are listed below — ready for your voice platform campaigns.</p>
+        </div>
+      </div>
+
+      <!-- Member phone directory — all registered patients with details -->
+      <div class="form-card" style="margin-bottom:22px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+          <div>
+            <h3 style="margin-bottom:3px">📞 Registered Member Directory</h3>
+            <p style="font-size:13px;color:var(--muted)">Every patient who has registered — name, email, phone, and booking count.</p>
+          </div>
+          <div id="voice-member-count" style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--accent2)">0 members</div>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>📞 Phone / WhatsApp</th>
+                <th>Registered On</th>
+                <th>Total Bookings</th>
+                <th>Last Booking</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="voice-member-table"></tbody>          </table>
+        </div>
+      </div>
+
+      <!-- Voice agent embed slot -->
+      <div class="form-card">
+        <h3 style="margin-bottom:16px">🔌 Voice Agent Embed</h3>
+        <div class="voice-integration-info">
+          <div class="voice-int-step">
+            <div class="voice-int-num">1</div>
+            <div><strong>Choose a platform</strong><span>ElevenLabs, Vapi.ai, Bland AI, Retell AI, or custom API</span></div>
+          </div>
+          <div class="voice-int-step">
+            <div class="voice-int-num">2</div>
+            <div><strong>Get your embed code</strong><span>Copy the script tag / iframe from your voice dashboard</span></div>
+          </div>
+          <div class="voice-int-step">
+            <div class="voice-int-num">3</div>
+            <div><strong>Paste in index.html</strong><span>Replace the placeholder div below with your embed code</span></div>
+          </div>
+        </div>
+
+        <!-- Make.com Webhook config -->
+        <div style="margin:20px 0;background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.2);border-radius:12px;padding:16px 20px">
+          <h4 style="margin:0 0 6px;font-size:14px;font-weight:700;color:var(--accent2)">⚡ Make.com Webhook — Auto-trigger on every booking</h4>
+          <p style="font-size:13px;color:var(--muted);margin:0 0 12px">Paste your Make.com webhook URL in <code>script.js</code> → <code>MAKE_WEBHOOK_URL</code>. On every new booking, DiagnoLens will POST the full appointment data (name, phone, token, hospital, date, slot) to your Make scenario — use it to trigger automated voice calls, SMS, CRM updates, and more.</p>
+          <div style="background:var(--surface);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);font-family:monospace">
+            POST payload: { token, patientName, phone, email, hospital, dept, city, date, slot, bookedAt, apptId }
+          </div>
+          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+            <span class="int-tag">Make.com</span>
+            <span class="int-tag">Zapier</span>
+            <span class="int-tag">n8n</span>
+            <span class="int-tag">Any Webhook</span>
+          </div>
+        </div>
+
+        <!-- ▼▼▼ PASTE YOUR VOICE AGENT EMBED CODE INSIDE THIS DIV ▼▼▼ -->
+        <div id="voice-embed-slot" class="voice-embed-placeholder">
+          <div class="voice-embed-icon">🤖</div>
+          <h4>Voice Agent Widget Appears Here</h4>
+          <p>Paste your ElevenLabs / Vapi.ai / Bland AI embed code inside the <code>#voice-embed-slot</code> div in index.html to activate the widget.</p>
+          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px">
+            <span class="int-tag">ElevenLabs</span>
+            <span class="int-tag">Vapi.ai</span>
+            <span class="int-tag">Bland AI</span>
+            <span class="int-tag">Retell AI</span>
+            <span class="int-tag">Custom API</span>
+          </div>
+        </div>
+        <!-- ▲▲▲ END EMBED SLOT ▲▲▲ -->
+
+        <div class="voice-prompt-box">
+          <strong>💡 Suggested System Prompt for your Voice Agent:</strong><br>
+          <em>"You are DiagnoLens, an AI healthcare assistant. Help patients book OPD appointments, check queue status, get hospital info, and answer health queries in Hindi and English. Available hospitals include Fortis, AIIMS, Apollo, Max, Medanta across Delhi, Mumbai, Bangalore, Chennai, Hyderabad and more."</em>
+        </div>
+      </div>
+
+    </div><!-- /admin-voice-section -->
+
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: LIVE QUEUE TRACKER ════════════════ -->
+<div class="page" id="page-queue">
+  <div class="dash-wrap" style="max-width:860px">
+    <div class="queue-hero">
+      <div class="live-badge"><div class="live-dot"></div> LIVE</div>
+      <h2>📊 Live Queue Tracker</h2>
+      <p>See your real-time position in the OPD queue. Updates in real-time from your bookings.</p>
+    </div>
+    <div class="form-card">
+      <h3 style="margin-bottom:14px">Select Your Appointment</h3>
+      <div class="form-group">
+        <label>Your Upcoming Appointments</label>
+        <select id="queue-appt-select" onchange="loadQueueForAppt()"><option value="">— Select an appointment to track —</option></select>
+      </div>
+    </div>
+    <div class="queue-position-card" id="queue-position-card" style="display:none">
+      <div class="queue-number" id="queue-pos-number">—</div>
+      <div class="queue-label" id="queue-pos-label">Patients before you</div>
+      <div class="queue-wait" id="queue-wait-time">—</div>
+      <div class="queue-wait-label" id="queue-wait-sublabel">Estimated wait</div>
+      <div class="queue-progress-wrap">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px">
+          <span>Queue Progress</span><span id="queue-progress-pct">0%</span>
+        </div>
+        <div class="queue-progress-bar"><div class="queue-progress-fill" id="queue-progress-fill" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div id="queue-main">
+      <div class="section-title">Queue Overview</div>
+      <div class="queue-list" id="queue-list">
+        <div class="empty"><div class="empty-icon">📊</div><h4>Select an appointment above</h4><p>Your live queue position will appear here</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ PAGE: WHATSAPP ALERTS ══════════════════ -->
+<div class="page" id="page-whatsapp">
+  <div class="dash-wrap" style="max-width:820px">
+    <div class="wa-hero">
+      <div class="wa-hero-icon">📱</div>
+      <div>
+        <h2>WhatsApp Alerts</h2>
+        <p>Booking confirmations are sent directly to your WhatsApp. Tap "Open WhatsApp" on any alert.</p>
+      </div>
+    </div>
+    <div class="wa-status-card">
+      <div class="wa-status-left">
+        <div class="wa-status-icon">📞</div>
+        <div>
+          <div class="wa-status-title">Your WhatsApp Number</div>
+          <div class="wa-status-sub" id="wa-phone-display">Not set</div>
+        </div>
+      </div>
+      <button class="btn-green" onclick="sendTestWhatsApp()">📤 Send Test Message</button>
+    </div>
+    <div class="wa-setup-box">
+      <h4>📋 How WhatsApp Alerts Work</h4>
+      <ol>
+        <li>Every booking confirmation is <strong>automatically logged</strong> in the Alert Log below</li>
+        <li>Click <strong>"Open WhatsApp"</strong> on any alert to send the pre-filled message from your device</li>
+        <li>Works on mobile (opens WhatsApp app) and desktop (opens WhatsApp Web)</li>
+        <li>✅ All alert history is stored on this device and visible in the Alert Log</li>
+      </ol>
+    </div>
+    <div class="wa-status-card">
+      <div class="wa-status-left">
+        <div class="wa-status-icon">💾</div>
+        <div><div class="wa-status-title">Local Alert Logging</div><div class="wa-status-sub">All booking alerts are stored on this device instantly</div></div>
+      </div>
+      <span class="wa-pill-green">Active</span>
+    </div>
+    <div class="section-title" style="margin-top:8px">Alert Log</div>
+    <div class="alert-log" id="wa-alert-log">
+      <div class="empty"><div class="empty-icon">💬</div><h4>No alerts yet</h4><p>Alerts are auto-sent when a booking is confirmed</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: VIDEO CONSULTATION ════════════════ -->
+<div class="page" id="page-video">
+  <div class="dash-wrap" style="max-width:1100px" id="page-video-inner">
+    <div id="doctor-grid-section">
+      <div class="dash-header">
+        <div>
+          <div class="dash-greeting">📹 Video <span>Consultation</span></div>
+          <div class="dash-subtitle">Connect with specialist doctors instantly — no travel needed</div>
+        </div>
+      </div>
+      <div style="margin-bottom:24px;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.15);border-radius:12px;padding:14px 18px;display:flex;gap:12px;align-items:flex-start">
+        <div style="font-size:22px">ℹ️</div>
+        <div>
+          <h4 style="margin:0 0 4px;font-size:14px;font-weight:700">How Video Calling Works</h4>
+          <p style="margin:0;font-size:13px;color:var(--muted)">This uses <strong>WebRTC</strong> for peer-to-peer video. Your camera &amp; mic will be requested when you click "Start Video Consult". Please click <strong>Allow</strong> in your browser prompt.</p>
+        </div>
+      </div>
+      <div class="doctor-grid" id="doctor-grid"></div>
+    </div>
+    <div class="waiting-room" id="waiting-room" style="display:none">
+      <div class="waiting-animation">🩺</div>
+      <h3>Connecting to <span id="waiting-doctor-name">Doctor</span>…</h3>
+      <p>Please allow camera &amp; microphone access when prompted</p>
+      <p style="margin-top:8px;color:var(--accent);font-weight:600">Setting up secure video connection</p>
+    </div>
+    <div id="video-room-wrap" style="display:none">
+      <div class="video-room">
+        <div class="video-main" id="video-main">
+          <div id="remote-placeholder">
+            <div class="video-placeholder">
+              <div class="big-icon">👨‍⚕️</div>
+              <p>Connecting to doctor…</p>
+            </div>
+          </div>
+          <video id="remoteVideo" autoplay playsinline></video>
+          <video id="localVideo" autoplay playsinline muted></video>
+          <div class="call-name-tag" id="call-name-tag"></div>
+          <div class="call-timer" id="call-timer">00:00</div>
+        </div>
+        <div class="call-controls">
+          <button class="ctrl-btn" id="btn-mic" onclick="toggleMic()" title="Toggle Microphone">🎤</button>
+          <button class="ctrl-btn" id="btn-cam" onclick="toggleCam()" title="Toggle Camera">📷</button>
+          <button class="ctrl-btn end-call" onclick="stopCall()" title="End Call">📵</button>
+          <button class="ctrl-btn" title="Chat (coming soon)">💬</button>
+          <button class="ctrl-btn" title="Screen Share (coming soon)">🖥️</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:11px;margin-top:14px;flex-wrap:wrap">
+        <button class="btn-rose" onclick="stopCall()">📵 End Consultation</button>
+        <button class="btn-secondary" style="padding:10px 18px;font-size:13px" onclick="navGoTo('page-patient')">Back to Dashboard</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
