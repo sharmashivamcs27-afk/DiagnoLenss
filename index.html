@@ -320,7 +320,9 @@
         </div>
         <div class="form-group">
           <label>Token / Appointment ID</label>
-          <input type="text" id="admin-wa-token" placeholder="e.g. FOR-CAR-001">
+          <select id="admin-wa-token" onchange="adminWaTokenChange()" style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;background:var(--surface);color:var(--text)">
+            <option value="">— Select an appointment —</option>
+          </select>
         </div>
         <div class="form-group">
           <label>Quick Templates</label>
@@ -346,7 +348,13 @@
 
       <!-- Send SMS to individual patient -->
       <div class="form-card" id="admin-sms-panel">
-        <h3 style="margin-bottom:18px">💬 Send SMS</h3>
+        <h3 style="margin-bottom:12px">💬 Send SMS via Twilio</h3>
+
+        <!-- Twilio backend URL config — hardcoded, no input needed -->
+        <div style="background:rgba(37,99,235,.06);border:1.5px solid rgba(37,99,235,.2);border-radius:10px;padding:13px 16px;margin-bottom:18px">
+          <div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:4px">⚙️ Twilio Backend</div>
+          <div style="font-size:12px;color:#1e6b3c;font-weight:600">✅ Configured — SMS will be sent via Twilio (<code>https://diagnolenss-production.up.railway.app</code>)</div>
+        </div>
         <div class="form-row">
           <div class="form-group">
             <label>Patient Phone Number <span style="color:var(--rose)">*</span></label>
@@ -359,7 +367,9 @@
         </div>
         <div class="form-group">
           <label>Token / Appointment ID</label>
-          <input type="text" id="admin-sms-token" placeholder="e.g. FOR-CAR-001">
+          <select id="admin-sms-token" onchange="adminSmsTokenChange()" style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;background:var(--surface);color:var(--text)">
+            <option value="">— Select an appointment —</option>
+          </select>
         </div>
         <div class="form-group">
           <label>Quick Templates</label>
@@ -407,6 +417,24 @@
       </div>
       <div class="form-card">
         <h3 style="margin-bottom:16px">🔗 Your Google Sheet</h3>
+
+        <!-- Apps Script URL config -->
+        <div style="background:rgba(52,168,83,.06);border:1.5px solid rgba(52,168,83,.25);border-radius:12px;padding:16px 20px;margin-bottom:18px">
+          <h4 style="margin:0 0 6px;font-size:14px;font-weight:700;color:#1e6b3c">⚙️ Google Apps Script Webhook URL</h4>
+          <p style="font-size:13px;color:var(--muted);margin:0 0 10px">Paste your deployed Apps Script Web App URL here — every new booking will automatically save a row to your Google Sheet.</p>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input type="url" id="gas-url-input"
+              placeholder="https://script.google.com/macros/s/…/exec"
+              style="flex:1;min-width:220px;padding:9px 13px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
+            <button onclick="saveGasUrl()"
+              style="padding:9px 18px;background:#34a853;color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">💾 Save URL</button>
+            <button onclick="testGasUrl()"
+              style="padding:9px 18px;background:#1e6b3c;color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">🧪 Test</button>
+          </div>
+          <div id="gas-url-status" style="margin-top:8px;font-size:12px;color:var(--muted)">Not configured</div>
+        </div>
+
+        <!-- Sheet link row -->
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
           <div>
             <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px">Sheet URL</div>
@@ -460,7 +488,13 @@
 
       <!-- Recent local registrations -->
       <div class="form-card">
-        <h3 style="margin-bottom:14px">🕓 Recent Registrations (Last 10)</h3>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+          <h3 style="margin:0">🕓 Recent Registrations (Last 10)</h3>
+          <button onclick="syncAllToSheets()"
+            style="padding:8px 16px;background:#34a853;color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">
+            🔄 Sync All to Sheet
+          </button>
+        </div>
         <div style="overflow-x:auto">
           <table>
             <thead><tr><th>Token</th><th>Name</th><th>Phone</th><th>Hospital</th><th>Date</th><th>Slot</th><th>Booked At</th></tr></thead>
@@ -528,14 +562,22 @@
           </div>
         </div>
 
-        <!-- Make.com Webhook config -->
+        <!-- Make.com Webhook config — live editable -->
         <div style="margin:20px 0;background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.2);border-radius:12px;padding:16px 20px">
           <h4 style="margin:0 0 6px;font-size:14px;font-weight:700;color:var(--accent2)">⚡ Make.com Webhook — Auto-trigger on every booking</h4>
-          <p style="font-size:13px;color:var(--muted);margin:0 0 12px">Paste your Make.com webhook URL in <code>script.js</code> → <code>MAKE_WEBHOOK_URL</code>. On every new booking, DiagnoLens will POST the full appointment data (name, phone, token, hospital, date, slot) to your Make scenario — use it to trigger automated voice calls, SMS, CRM updates, and more.</p>
-          <div style="background:var(--surface);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);font-family:monospace">
+          <p style="font-size:13px;color:var(--muted);margin:0 0 12px">Paste your Make.com (or Zapier / n8n) webhook URL below. DiagnoLens will POST the full appointment data to this URL on every new booking — use it to trigger automated voice calls, SMS, CRM updates, and more.</p>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input type="url" id="make-webhook-input"
+              placeholder="https://hook.eu1.make.com/xxxxxxxxxx"
+              style="flex:1;min-width:220px;padding:9px 13px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
+            <button onclick="saveMakeWebhookUrl()"
+              style="padding:9px 18px;background:var(--accent2);color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">💾 Save URL</button>
+          </div>
+          <div id="make-webhook-status" style="margin-top:8px;font-size:12px;color:var(--muted)">Not configured</div>
+          <div style="margin-top:10px;background:var(--surface);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);font-family:monospace">
             POST payload: { token, patientName, phone, email, hospital, dept, city, date, slot, bookedAt, apptId }
           </div>
-          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
             <span class="int-tag">Make.com</span>
             <span class="int-tag">Zapier</span>
             <span class="int-tag">n8n</span>
@@ -543,20 +585,56 @@
           </div>
         </div>
 
-        <!-- ▼▼▼ PASTE YOUR VOICE AGENT EMBED CODE INSIDE THIS DIV ▼▼▼ -->
-        <div id="voice-embed-slot" class="voice-embed-placeholder">
-          <div class="voice-embed-icon">🤖</div>
-          <h4>Voice Agent Widget Appears Here</h4>
-          <p>Paste your ElevenLabs / Vapi.ai / Bland AI embed code inside the <code>#voice-embed-slot</code> div in index.html to activate the widget.</p>
-          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px">
-            <span class="int-tag">ElevenLabs</span>
-            <span class="int-tag">Vapi.ai</span>
-            <span class="int-tag">Bland AI</span>
-            <span class="int-tag">Retell AI</span>
-            <span class="int-tag">Custom API</span>
+        <!-- Voice Agent — Send message via Make.com Webhook -->
+        <div id="voice-embed-slot" style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:22px 24px">
+          <h4 style="margin:0 0 4px;font-size:15px;font-weight:700">🎙️ Send Patient to Voice Agent</h4>
+          <p style="font-size:13px;color:var(--muted);margin:0 0 18px">Enter a patient's details below and fire the Make.com webhook to trigger your automated voice/SMS workflow instantly.</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Patient Name</label>
+              <input type="text" id="voice-agent-name" placeholder="Arjun Sharma">
+            </div>
+            <div class="form-group">
+              <label>Phone Number <span style="color:var(--rose)">*</span></label>
+              <input type="tel" id="voice-agent-phone" placeholder="+91 98765 43210">
+            </div>
           </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Token / Appointment ID</label>
+              <input type="text" id="voice-agent-token" placeholder="e.g. FOR-CAR-001">
+            </div>
+            <div class="form-group">
+              <label>Hospital</label>
+              <input type="text" id="voice-agent-hospital" placeholder="e.g. Fortis Delhi">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Appointment Date</label>
+              <input type="date" id="voice-agent-date">
+            </div>
+            <div class="form-group">
+              <label>Time Slot</label>
+              <input type="text" id="voice-agent-slot" placeholder="e.g. 10:30">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Custom Message / Note (optional)</label>
+            <textarea id="voice-agent-message" rows="3"
+              style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;resize:vertical;outline:none"
+              placeholder="Any extra instruction for the voice agent workflow…"></textarea>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+            <button onclick="triggerVoiceAgentWebhook()"
+              style="padding:11px 24px;background:var(--accent2);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">
+              ⚡ Trigger Webhook
+            </button>
+            <button onclick="clearVoiceAgentForm()"
+              class="btn-secondary" style="padding:10px 18px;font-size:13px">🗑 Clear</button>
+          </div>
+          <div id="voice-agent-result" style="margin-top:12px;font-size:13px;display:none"></div>
         </div>
-        <!-- ▲▲▲ END EMBED SLOT ▲▲▲ -->
 
         <div class="voice-prompt-box">
           <strong>💡 Suggested System Prompt for your Voice Agent:</strong><br>
