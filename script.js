@@ -28,7 +28,9 @@ const DB = {
   saveAppt(appt) {
     const list=this.getAppointments(), idx=list.findIndex(a=>a.id===appt.id);
     if(idx>=0) list[idx]=appt; else list.push(appt);
-    this._write('appointments',list); return appt;
+    this._write('appointments',list);
+    cloudSaveAppt(appt); // sync to cloud for cross-device visibility
+    return appt;
   },
   updateAppt(id,fields) {
     const list=this.getAppointments(), idx=list.findIndex(a=>a.id===id);
@@ -58,6 +60,44 @@ const DB = {
   setSession(uid){ localStorage.setItem('dl_session',JSON.stringify(uid)); },
   clearSession() { localStorage.removeItem('dl_session'); },
 };
+
+// ══════════════════════════════════════════════════════════════
+// ── CROSS-DEVICE SYNC via Railway backend ─────────────────────
+// All appointments are synced to/from the Railway backend so
+// admin can see data from every device / user session.
+// ══════════════════════════════════════════════════════════════
+const RAILWAY_URL = 'https://diagnolenss-production.up.railway.app';
+
+async function cloudSaveAppt(appt){
+  try{
+    await fetch(RAILWAY_URL+'/cloud-appt', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(appt)
+    });
+  } catch(e){ console.warn('Cloud save skipped:', e.message); }
+}
+
+async function cloudFetchAppts(){
+  try{
+    const res = await fetch(RAILWAY_URL+'/cloud-appts');
+    if(!res.ok) return [];
+    return await res.json();
+  } catch(e){ return []; }
+}
+
+// Merge cloud appointments into local DB (cloud wins for same id)
+async function syncCloudAppts(){
+  const cloud = await cloudFetchAppts();
+  if(!cloud || !cloud.length) return;
+  const local = DB.getAppointments();
+  const merged = [...local];
+  for(const ca of cloud){
+    const idx = merged.findIndex(a=>a.id===ca.id);
+    if(idx>=0) merged[idx]=ca; else merged.push(ca);
+  }
+  DB._write('appointments', merged);
+}
 
 // ── SEED DEFAULT ADMIN ACCOUNT ────────────────────────────────
 // Creates admin@diagnolens.com / Admin@123
@@ -190,9 +230,12 @@ function hashPass(p){ return hashPassFn(p); }
 
 // ── BOOT ──────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded',()=>{
-  const uid=DB.getSession();
-  if(uid){ const user=DB.getUserById(uid); if(user){ currentUser=user; afterLogin(user); return; } DB.clearSession(); }
-  showPage('page-landing');
+  // Pull appointments from cloud first so admin sees all-device data
+  syncCloudAppts().then(()=>{
+    const uid=DB.getSession();
+    if(uid){ const user=DB.getUserById(uid); if(user){ currentUser=user; afterLogin(user); return; } DB.clearSession(); }
+    showPage('page-landing');
+  });
 });
 
 // ── NAVIGATION ────────────────────────────────────────────────
@@ -740,12 +783,18 @@ function adminTab(tab,btn){
   if(tab==='voice'){
     voiceSection.style.display='block';
     renderVoiceMemberTable();
+    setTimeout(updateMakeWebhookStatus, 50);
   } else if(tab==='whatsapp'){
     waSection.style.display='block';
-    renderAdminWaTodayTable();
+    syncCloudAppts().then(()=>{
+      renderAdminWaTodayTable();
+      populateApptDropdowns();
+    });
+    setTimeout(updateTwilioBackendStatus, 50);
   } else if(tab==='sheets'){
     sheetsSection.style.display='block';
     renderSheetsRecent();
+    setTimeout(updateGasUrlStatus, 50);
   } else {
     tableWrap.style.display='block';
     const titles={appointments:'All Appointments',today:"Today's Appointments",members:'All Registered Members (Permanent List)'};
@@ -816,20 +865,25 @@ function setWaTpl(type){
   if(el&&templates[type]) el.value=templates[type];
 }
 function adminDoClearWaForm(){
-  ['admin-wa-phone','admin-wa-name','admin-wa-token','admin-wa-msg'].forEach(id=>{
+  ['admin-wa-phone','admin-wa-name','admin-wa-msg'].forEach(id=>{
     const el=document.getElementById(id); if(el)el.value='';
   });
+  const sel=document.getElementById('admin-wa-token');
+  if(sel){ sel.value=''; sel.dataset.apptId=''; }
 }
 
 function renderAdminDashboard(){
-  const appts=DB.getAppointments(), today=getTodayStr();
-  const patients=DB.getUsers().filter(u=>u.role==='patient');
-  document.getElementById('stat-total').textContent    =appts.length;
-  document.getElementById('stat-today').textContent    =appts.filter(a=>a.date===today).length;
-  document.getElementById('stat-upcoming').textContent =appts.filter(a=>a.date>=today&&a.status==='upcoming').length;
-  document.getElementById('stat-depts').textContent    =new Set(appts.map(a=>a.dept)).size;
-  document.getElementById('stat-members').textContent  =patients.length;
-  adminRender();
+  // Pull latest cloud appointments before rendering
+  syncCloudAppts().then(()=>{
+    const appts=DB.getAppointments(), today=getTodayStr();
+    const patients=DB.getUsers().filter(u=>u.role==='patient');
+    document.getElementById('stat-total').textContent    =appts.length;
+    document.getElementById('stat-today').textContent    =appts.filter(a=>a.date===today).length;
+    document.getElementById('stat-upcoming').textContent =appts.filter(a=>a.date>=today&&a.status==='upcoming').length;
+    document.getElementById('stat-depts').textContent    =new Set(appts.map(a=>a.dept)).size;
+    document.getElementById('stat-members').textContent  =patients.length;
+    adminRender();
+  });
 }
 
 function adminRender(){
@@ -985,21 +1039,165 @@ function renderVoiceMemberTable(){
 }
 
 // ── INTEGRATIONS CONFIG ───────────────────────────────────────
-// Paste your Google Apps Script Web App URL here to enable Sheets saving
-// See: Extensions > Apps Script > Deploy as Web App (Anyone can access)
-const GOOGLE_APPS_SCRIPT_URL = '';   // e.g. 'https://script.google.com/macros/s/AKfyc.../exec'
+// URLs are now stored in localStorage — configurable from the Admin UI
+// (no need to edit script.js)
 
-// Paste your Make.com webhook URL here for the Voice Agent trigger
-const MAKE_WEBHOOK_URL = '';  // e.g. 'https://hook.eu1.make.com/xxxxxxxxxx'
+function getGasUrl()         { return localStorage.getItem('dl_gas_url')  || ''; }
+function getMakeWebhookUrl() { return localStorage.getItem('dl_make_url') || ''; }
+function getTwilioBackend()  { return 'https://diagnolenss-production.up.railway.app'; }
+
+// Legacy constants — kept for backwards compat if set directly in code
+const GOOGLE_APPS_SCRIPT_URL = '';   // Use Admin UI → Google Sheets panel instead
+const MAKE_WEBHOOK_URL       = '';   // Use Admin UI → Voice Agent panel instead
+
+// ── GAS URL ADMIN UI ──────────────────────────────────────────
+function saveGasUrl(){
+  const val=(document.getElementById('gas-url-input')?.value||'').trim();
+  if(!val){showToast('Please paste your Apps Script URL','error');return;}
+  if(!val.startsWith('https://script.google.com')){showToast('URL must be a Google Apps Script URL','error');return;}
+  localStorage.setItem('dl_gas_url', val);
+  updateGasUrlStatus();
+  showToast('✅ Google Sheets URL saved!','success');
+}
+
+function testGasUrl(){
+  const url=getGasUrl();
+  if(!url){showToast('Please save your Apps Script URL first','error');return;}
+  // Send a test row
+  const testRow={token:'TEST-001',patientName:'DiagnoLens Test',phone:'+910000000000',
+    email:'test@diagnolens.com',hospital:'Test Hospital',dept:'General',city:'Delhi',
+    date:getTodayStr(),slot:'10:00',bookedAt:new Date().toLocaleString('en-IN')};
+  fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(testRow)})
+    .then(()=>showToast('🧪 Test row sent to Google Sheets (check your sheet)','success'))
+    .catch(e=>showToast('❌ Test failed: '+e.message,'error'));
+}
+
+function updateGasUrlStatus(){
+  const el=document.getElementById('gas-url-status'); if(!el)return;
+  const url=getGasUrl();
+  const input=document.getElementById('gas-url-input');
+  if(url){
+    el.textContent='✅ Configured — auto-saving all new bookings to Google Sheets';
+    el.style.color='#1e6b3c';
+    if(input)input.value=url;
+  } else {
+    el.textContent='Not configured — paste your Apps Script URL above to enable auto-save';
+    el.style.color='var(--muted)';
+  }
+}
+
+// ── MAKE WEBHOOK ADMIN UI ─────────────────────────────────────
+function saveMakeWebhookUrl(){
+  const val=(document.getElementById('make-webhook-input')?.value||'').trim();
+  if(!val){showToast('Please paste your webhook URL','error');return;}
+  localStorage.setItem('dl_make_url', val);
+  updateMakeWebhookStatus();
+  showToast('✅ Make.com webhook URL saved!','success');
+}
+
+function updateMakeWebhookStatus(){
+  const el=document.getElementById('make-webhook-status'); if(!el)return;
+  const url=getMakeWebhookUrl();
+  const input=document.getElementById('make-webhook-input');
+  if(url){
+    el.textContent='✅ Configured — webhook fires on every new booking';
+    el.style.color='var(--accent2)';
+    if(input)input.value=url;
+  } else {
+    el.textContent='Not configured — paste your webhook URL above';
+    el.style.color='var(--muted)';
+  }
+}
+
+// ── TWILIO BACKEND ADMIN UI ───────────────────────────────────
+function saveTwilioBackendUrl(){
+  const val=(document.getElementById('twilio-backend-input')?.value||'').trim();
+  if(!val){showToast('Please enter your backend URL','error');return;}
+  localStorage.setItem('dl_twilio_url', val);
+  updateTwilioBackendStatus();
+  showToast('✅ Twilio backend URL saved!','success');
+}
+
+function updateTwilioBackendStatus(){
+  const el=document.getElementById('twilio-backend-status'); if(!el)return;
+  const url=getTwilioBackend();
+  const input=document.getElementById('twilio-backend-input');
+  if(url){
+    el.textContent=`✅ Configured — SMS will be sent via Twilio (${url})`;
+    el.style.color='var(--accent)';
+    if(input)input.value=url;
+  } else {
+    el.textContent='Not configured — SMS will open native SMS app as fallback';
+    el.style.color='var(--muted)';
+  }
+}
+
+// ── VOICE AGENT WEBHOOK FORM ──────────────────────────────────
+async function triggerVoiceAgentWebhook(){
+  const phone=(document.getElementById('voice-agent-phone')?.value||'').trim();
+  const name =(document.getElementById('voice-agent-name')?.value||'').trim();
+  if(!phone){showToast('Please enter a phone number','error');return;}
+  const url=getMakeWebhookUrl();
+  if(!url){showToast('Please configure your Make.com webhook URL above first','error');return;}
+  const payload={
+    patientName: name||'Patient',
+    phone, token:  (document.getElementById('voice-agent-token')?.value||'').trim(),
+    hospital:      (document.getElementById('voice-agent-hospital')?.value||'').trim(),
+    date:          (document.getElementById('voice-agent-date')?.value||'').trim(),
+    slot:          (document.getElementById('voice-agent-slot')?.value||'').trim(),
+    message:       (document.getElementById('voice-agent-message')?.value||'').trim(),
+    triggeredAt:   new Date().toLocaleString('en-IN'),
+    source:        'DiagnoLens Voice Agent Panel'
+  };
+  const resultEl=document.getElementById('voice-agent-result');
+  if(resultEl){resultEl.style.display='block';resultEl.textContent='⏳ Sending…';resultEl.style.color='var(--muted)';}
+  try{
+    await fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    showToast('⚡ Webhook triggered for '+payload.patientName,'success');
+    if(resultEl){resultEl.textContent=`✅ Webhook fired for ${payload.patientName} (${phone}) at ${payload.triggeredAt}`;resultEl.style.color='#1e6b3c';}
+  }catch(e){
+    showToast('❌ Webhook failed: '+e.message,'error');
+    if(resultEl){resultEl.textContent='❌ Failed: '+e.message;resultEl.style.color='var(--rose)';}
+  }
+}
+
+function clearVoiceAgentForm(){
+  ['voice-agent-name','voice-agent-phone','voice-agent-token',
+   'voice-agent-hospital','voice-agent-date','voice-agent-slot','voice-agent-message'].forEach(id=>{
+    const el=document.getElementById(id); if(el)el.value='';
+  });
+  const r=document.getElementById('voice-agent-result');
+  if(r){r.style.display='none';r.textContent='';}
+}
+
+// ── SYNC ALL BOOKINGS TO SHEETS ───────────────────────────────
+async function syncAllToSheets(){
+  const url=getGasUrl();
+  if(!url){showToast('Please configure your Apps Script URL in the Google Sheets panel first','error');return;}
+  const appts=DB.getAppointments().sort((a,b)=>b.bookedAt-a.bookedAt).slice(0,50);
+  if(appts.length===0){showToast('No bookings to sync','info');return;}
+  showToast(`⏳ Syncing ${appts.length} bookings…`,'info');
+  let sent=0;
+  for(const appt of appts){
+    const row={
+      token:appt.token,patientName:appt.patientName,phone:appt.patientPhone||'',
+      email:'',hospital:appt.hospitalName,dept:appt.dept,city:appt.city||'',
+      date:appt.date,slot:appt.slot,bookedAt:new Date(appt.bookedAt).toLocaleString('en-IN')
+    };
+    try{
+      await fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(row)});
+      sent++;
+      await new Promise(r=>setTimeout(r,300)); // small delay to avoid rate-limits
+    }catch(e){console.warn('Sync error for',appt.token,e.message);}
+  }
+  showToast(`✅ Synced ${sent} bookings to Google Sheets`,'success');
+}
 
 // ── GOOGLE SHEETS AUTO-SAVE via Apps Script Webhook ───────────
-// No backend needed — uses a Google Apps Script Web App URL directly.
-// Setup: In your Google Sheet → Extensions → Apps Script → paste the
-// doPost function from credentials.js comments → Deploy → copy URL above.
 async function saveToGoogleSheets(appt){
-  if(!GOOGLE_APPS_SCRIPT_URL){
-    console.log('📋 Google Sheets: Set GOOGLE_APPS_SCRIPT_URL in script.js to enable. Row data:', appt);
-    // Still show it in the local Sheets panel
+  const url = getGasUrl();
+  if(!url){
+    console.log('📋 Google Sheets: Configure URL in Admin → Google Sheets panel. Row data:', appt);
     renderSheetsRecent();
     return;
   }
@@ -1016,17 +1214,17 @@ async function saveToGoogleSheets(appt){
       slot:        appt.slot,
       bookedAt:    new Date(appt.bookedAt).toLocaleString('en-IN')
     };
-    // Apps Script requires no-cors mode (it redirects); we fire-and-forget
-    await fetch(GOOGLE_APPS_SCRIPT_URL, {
+    await fetch(url, {
       method: 'POST',
       mode:   'no-cors',
       headers:{'Content-Type':'application/json'},
       body:   JSON.stringify(row)
     });
     console.log('✅ Sent to Google Sheets webhook:', appt.token);
-    showToast('📊 Saved to Google Sheets','success');
+    showToast('📊 Saved to Google Sheets ✅','success');
   } catch(e){
     console.warn('⚠️ Google Sheets webhook failed:', e.message);
+    showToast('⚠️ Sheets save failed: '+e.message,'error');
   }
   renderSheetsRecent();
 }
@@ -1035,7 +1233,8 @@ async function saveToGoogleSheets(appt){
 // In Make.com: Create scenario → Webhooks → Custom webhook → copy URL above
 // The webhook receives full appointment JSON — use it to trigger SMS, calls, etc.
 async function triggerMakeWebhook(appt, user){
-  if(!MAKE_WEBHOOK_URL) return;
+  const url = getMakeWebhookUrl();
+  if(!url) return;
   try{
     const payload={
       token:       appt.token,
@@ -1051,7 +1250,7 @@ async function triggerMakeWebhook(appt, user){
       userId:      appt.userId,
       apptId:      appt.id
     };
-    await fetch(MAKE_WEBHOOK_URL,{
+    await fetch(url,{
       method:'POST', mode:'no-cors',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify(payload)
@@ -1067,15 +1266,65 @@ function adminSendWhatsApp(phone, patientName, token){
   const waTabBtn=document.querySelector('.admin-tab[onclick*="whatsapp"]');
   if(waTabBtn) adminTab('whatsapp', waTabBtn);
   setTimeout(()=>{
+    populateApptDropdowns();
+    const appt = DB.getAppointments().find(a=>
+      (token && a.token===token) || (!token && a.patientPhone===phone));
+    const sel = document.getElementById('admin-wa-token');
+    if(sel && appt){ sel.value=appt.id; sel.dataset.apptId=appt.id; }
     const phoneEl=document.getElementById('admin-wa-phone');
     const nameEl =document.getElementById('admin-wa-name');
-    const tokenEl=document.getElementById('admin-wa-token');
     if(phoneEl) phoneEl.value=phone;
     if(nameEl)  nameEl.value=patientName;
-    if(tokenEl&&token) tokenEl.value=token;
     const panel=document.getElementById('admin-wa-panel');
     if(panel) panel.scrollIntoView({behavior:'smooth',block:'start'});
   },200);
+}
+
+// ── POPULATE APPOINTMENT DROPDOWNS in SMS/WA panels ──────────
+function populateApptDropdowns(){
+  const appts = DB.getAppointments().filter(a=>a.status!=='cancelled')
+    .sort((a,b)=>b.bookedAt-a.bookedAt);
+
+  function buildOptions(currentVal){
+    const placeholder = '<option value="">— Select an appointment —</option>';
+    return placeholder + appts.map(a=>{
+      const label = `${a.token} — ${a.patientName} — ${a.hospitalName} (${formatDate(a.date)} ${a.slot})`;
+      return `<option value="${a.id}" ${currentVal===a.id?'selected':''}>${label}</option>`;
+    }).join('');
+  }
+
+  const smsEl = document.getElementById('admin-sms-token');
+  const waEl  = document.getElementById('admin-wa-token');
+  if(smsEl){ const v=smsEl.dataset.apptId||''; smsEl.innerHTML=buildOptions(v); }
+  if(waEl){  const v=waEl.dataset.apptId||'';  waEl.innerHTML=buildOptions(v); }
+}
+
+// Called when admin selects an appointment in the SMS dropdown
+function adminSmsTokenChange(){
+  const sel = document.getElementById('admin-sms-token');
+  const apptId = sel?.value;
+  if(!apptId) return;
+  const appt = DB.getAppointments().find(a=>a.id===apptId);
+  if(!appt) return;
+  const phoneEl = document.getElementById('admin-sms-phone');
+  const nameEl  = document.getElementById('admin-sms-name');
+  if(phoneEl) phoneEl.value = appt.patientPhone||'';
+  if(nameEl)  nameEl.value  = appt.patientName||'';
+  sel.dataset.apptId = apptId;
+}
+
+// Called when admin selects an appointment in the WA dropdown
+function adminWaTokenChange(){
+  const sel = document.getElementById('admin-wa-token');
+  const apptId = sel?.value;
+  if(!apptId) return;
+  const appt = DB.getAppointments().find(a=>a.id===apptId);
+  if(!appt) return;
+  const phoneEl = document.getElementById('admin-wa-phone');
+  const nameEl  = document.getElementById('admin-wa-name');
+  if(phoneEl) phoneEl.value = appt.patientPhone||'';
+  if(nameEl)  nameEl.value  = appt.patientName||'';
+  sel.dataset.apptId = apptId;
 }
 
 // Open the admin SMS panel prefilled for a patient
@@ -1083,22 +1332,30 @@ function adminSendSMS(phone, patientName, token){
   const waTabBtn=document.querySelector('.admin-tab[onclick*="whatsapp"]');
   if(waTabBtn) adminTab('whatsapp', waTabBtn);
   setTimeout(()=>{
+    populateApptDropdowns();
+    // Find matching appointment by token or phone and pre-select
+    const appt = DB.getAppointments().find(a=>
+      (token && a.token===token) || (!token && a.patientPhone===phone));
+    const sel = document.getElementById('admin-sms-token');
+    if(sel && appt){ sel.value=appt.id; sel.dataset.apptId=appt.id; }
     const phoneEl=document.getElementById('admin-sms-phone');
     const nameEl =document.getElementById('admin-sms-name');
-    const tokenEl=document.getElementById('admin-sms-token');
     if(phoneEl) phoneEl.value=phone;
     if(nameEl)  nameEl.value=patientName;
-    if(tokenEl&&token) tokenEl.value=token;
     const panel=document.getElementById('admin-sms-panel');
     if(panel) panel.scrollIntoView({behavior:'smooth',block:'start'});
   },200);
 }
 
-// Send SMS — opens sms: URI (works on mobile) or copies to clipboard on desktop
-function adminDoSendSMS(){
+// Send SMS — uses Twilio backend if configured, otherwise opens sms: URI
+async function adminDoSendSMS(){
   const phone=(document.getElementById('admin-sms-phone')?.value||'').trim();
   const name =(document.getElementById('admin-sms-name')?.value||'').trim();
-  const token=(document.getElementById('admin-sms-token')?.value||'').trim();
+  // Get the human-readable token from the selected appointment
+  const sel  = document.getElementById('admin-sms-token');
+  const apptId = sel?.value||'';
+  const appt = apptId ? DB.getAppointments().find(a=>a.id===apptId) : null;
+  const token = appt ? appt.token : apptId;
   const msg  =(document.getElementById('admin-sms-msg')?.value||'').trim();
   if(!phone){showToast('Please enter a phone number','error');return;}
   if(!msg){showToast('Please enter a message','error');return;}
@@ -1109,15 +1366,40 @@ function adminDoSendSMS(){
   let clean=phone.replace(/\D/g,'');
   if(clean.length===10) clean='+91'+clean;
   else if(!clean.startsWith('+')) clean='+'+clean;
-  // Try sms: URI first (works on mobile browsers)
-  const smsLink=`sms:${clean}?body=${encodeURIComponent(finalMsg)}`;
-  window.open(smsLink,'_blank');
-  showToast('📨 Opening SMS…','success');
+
+  const backendUrl=getTwilioBackend();
+  if(backendUrl){
+    // Send via Twilio backend
+    try{
+      showToast('⏳ Sending SMS via Twilio…','info');
+      const res=await fetch(backendUrl.replace(/\/$/,'')+'/send-sms',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({to:clean,message:finalMsg})
+      });
+      const data=await res.json();
+      if(data.success){
+        showToast('✅ SMS sent via Twilio!','success');
+      } else {
+        showToast('❌ Twilio error: '+(data.error||'Unknown error'),'error');
+        console.error('Twilio SMS error:', data);
+      }
+    } catch(e){
+      showToast('❌ Backend unreachable: '+e.message+' — falling back to SMS app','error');
+      window.open(`sms:${clean}?body=${encodeURIComponent(finalMsg)}`,'_blank');
+    }
+  } else {
+    // Fallback: open native SMS app (works on mobile)
+    window.open(`sms:${clean}?body=${encodeURIComponent(finalMsg)}`,'_blank');
+    showToast('📨 Opening SMS app (configure Twilio backend for direct sending)','info');
+  }
 }
 function adminDoClearSmsForm(){
-  ['admin-sms-phone','admin-sms-name','admin-sms-token','admin-sms-msg'].forEach(id=>{
+  ['admin-sms-phone','admin-sms-name','admin-sms-msg'].forEach(id=>{
     const el=document.getElementById(id); if(el)el.value='';
   });
+  const sel=document.getElementById('admin-sms-token');
+  if(sel){ sel.value=''; sel.dataset.apptId=''; }
 }
 function setSmsTpl(type){
   const templates={
@@ -1134,7 +1416,10 @@ function setSmsTpl(type){
 function adminDoSendWhatsApp(){
   const phone =(document.getElementById('admin-wa-phone')?.value||'').trim();
   const name  =(document.getElementById('admin-wa-name')?.value||'').trim();
-  const token =(document.getElementById('admin-wa-token')?.value||'').trim();
+  const waSel = document.getElementById('admin-wa-token');
+  const waApptId = waSel?.value||'';
+  const waAppt = waApptId ? DB.getAppointments().find(a=>a.id===waApptId) : null;
+  const token = waAppt ? waAppt.token : waApptId;
   const msg   =(document.getElementById('admin-wa-msg')?.value||'').trim();
   if(!phone){showToast('Please enter a phone number','error');return;}
   if(!msg){showToast('Please enter a message','error');return;}
@@ -1179,3 +1464,15 @@ window.adminDoClearSmsForm=adminDoClearSmsForm;
 window.setSmsTpl=setSmsTpl;
 window.renderAdminWaTodayTable=renderAdminWaTodayTable;
 window.renderSheetsRecent=renderSheetsRecent;
+window.adminSmsTokenChange=adminSmsTokenChange;
+window.adminWaTokenChange=adminWaTokenChange;
+window.populateApptDropdowns=populateApptDropdowns;
+window.syncCloudAppts=syncCloudAppts;
+// New config functions
+window.saveGasUrl=saveGasUrl;
+window.testGasUrl=testGasUrl;
+window.saveMakeWebhookUrl=saveMakeWebhookUrl;
+window.saveTwilioBackendUrl=saveTwilioBackendUrl;
+window.triggerVoiceAgentWebhook=triggerVoiceAgentWebhook;
+window.clearVoiceAgentForm=clearVoiceAgentForm;
+window.syncAllToSheets=syncAllToSheets;
