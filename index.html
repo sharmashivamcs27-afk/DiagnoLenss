@@ -18,9 +18,10 @@
   </div>
   <!-- Feature links — shown after patient login only -->
   <div class="nav-links" id="nav-feature-links" style="display:none">
+    <button class="nav-link" onclick="navGoTo('page-blood')">🩸 Blood Donation</button>
     <button class="nav-link" onclick="navGoTo('page-queue')">📊 Live Queue</button>
-    <button class="nav-link" onclick="navGoTo('page-whatsapp')">📱 WhatsApp Alerts</button>
     <button class="nav-link" onclick="navGoTo('page-video')">📹 Video Consult</button>
+    <button class="nav-link" onclick="navGoTo('page-rx')">🤖 AI Prescription</button>
   </div>
   <div class="nav-right">
     <button class="nav-link cta" id="nav-book-btn" onclick="navBookAppointment()">📅 Book Appointment</button>
@@ -72,6 +73,23 @@
   </div>
 </div>
 
+<!-- ═══════════════ APPOINTMENT QR MODAL ════════════════════ -->
+<div class="modal-overlay" id="modal-appt-qr">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-icon" style="background:rgba(37,99,235,.1)">🎫</div>
+    <h3 id="appt-qr-title">Your Appointment QR</h3>
+    <p id="appt-qr-subtitle" style="font-size:12px;color:var(--muted);margin-bottom:4px"></p>
+    <div class="qr-wrap" style="margin:16px 0">
+      <div id="appt-qr-container"></div>
+      <div class="qr-note">📲 Show this QR at the OPD counter</div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button class="whatsapp-send-btn" id="appt-qr-wa-btn" style="display:none">📱 Send to WhatsApp</button>
+      <button class="btn-secondary" onclick="closeApptQrModal()" style="padding:10px 20px;font-size:13px">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════════════ PAGE: LANDING ═══════════════════════ -->
 <div class="page" id="page-landing">
   <div class="landing-bg">
@@ -85,9 +103,10 @@
     <p class="landing-sub">Book OPD appointments, track your live queue position, consult doctors over video, and get WhatsApp reminders — all in one place.</p>
     <div class="feat-grid">
       <div class="feat-card" onclick="goToAuth('patient')"><div class="feat-icon">📅</div><div class="feat-title">Book OPD Slot</div><div class="feat-sub">50+ hospitals, 12 cities</div></div>
-      <div class="feat-card" onclick="goToAuth('patient')"><div class="feat-icon">📊</div><div class="feat-title">Live Queue</div><div class="feat-sub">Real-time position</div></div>
+      <div class="feat-card blood-feat-card" onclick="goToAuth('patient')"><div class="feat-icon">🩸</div><div class="feat-title">Blood Donation</div><div class="feat-sub">Donate or find blood</div></div>
       <div class="feat-card" onclick="goToAuth('patient')"><div class="feat-icon">📱</div><div class="feat-title">WhatsApp Alerts</div><div class="feat-sub">Booking on your phone</div></div>
       <div class="feat-card" onclick="goToAuth('patient')"><div class="feat-icon">📹</div><div class="feat-title">Video Consult</div><div class="feat-sub">Talk to a doctor now</div></div>
+
     </div>
     <div class="landing-ctas">
       <button class="btn-primary" onclick="goToAuth('patient')">🏥 Get Started</button>
@@ -99,6 +118,8 @@
       <div class="stat-item"><div class="stat-num">24/7</div><div class="stat-label">Available</div></div>
       <div class="stat-item"><div class="stat-num">QR</div><div class="stat-label">Instant Token</div></div>
     </div>
+
+
   </div>
 </div>
 
@@ -191,7 +212,16 @@
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn-accent" onclick="showBookingForm()">+ New Appointment</button>
         <button class="btn-secondary" style="padding:10px 18px;font-size:13px" onclick="navGoTo('page-video')">📹 Video Consult</button>
-        <button class="btn-secondary" style="padding:10px 18px;font-size:13px" onclick="navGoTo('page-queue')">📊 Track Queue</button>
+        <button class="btn-blood" onclick="navGoTo('page-blood')">🩸 Blood Donation</button>
+        <button onclick="triggerVapiCallbackPatient()" id="patient-call-btn-header"
+          style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:linear-gradient(135deg,#7c3aed,#2563eb);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">
+          <span style="display:flex;align-items:center;gap:5px">
+            📞 Book via AI Call
+            <span style="display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,.2);border-radius:20px;padding:1px 7px;font-size:9px;font-weight:700;letter-spacing:.5px">
+              <span style="width:5px;height:5px;border-radius:50%;background:#4ade80;animation:pulse 2s ease-in-out infinite"></span>LIVE
+            </span>
+          </span>
+        </button>
       </div>
     </div>
 
@@ -231,12 +261,25 @@
       </div>
     </div>
 
+    <!-- patient-call-result hidden placeholder kept for JS compat -->
+    <div id="patient-call-result" style="display:none;margin-bottom:12px;font-size:13px;padding:10px 13px;border-radius:9px"></div>
+    <!-- patient-call-phone-display hidden placeholder kept for JS compat -->
+    <span id="patient-call-phone-display" style="display:none"></span>
+
     <!-- MY APPOINTMENTS -->
     <div class="section-title">My Appointments</div>
     <div class="filter-bar" style="margin-bottom:18px">
       <button class="filter-btn active" onclick="filterAppts('all',this)">All</button>
       <button class="filter-btn" onclick="filterAppts('upcoming',this)">Upcoming</button>
       <button class="filter-btn" onclick="filterAppts('done',this)">Completed</button>
+      <button class="filter-btn ai-filter-btn" onclick="filterAppts('ai',this)">
+        <span style="display:inline-flex;align-items:center;gap:6px">
+          📞 Book via AI
+          <span style="display:inline-flex;align-items:center;gap:3px;background:linear-gradient(135deg,#7c3aed,#2563eb);color:#fff;border-radius:20px;padding:1px 7px;font-size:9px;font-weight:700;letter-spacing:.5px">
+            <span style="width:5px;height:5px;border-radius:50%;background:#4ade80;animation:pulse 2s ease-in-out infinite"></span>AI
+          </span>
+        </span>
+      </button>
     </div>
     <div class="appt-list" id="patient-appt-list">
       <div class="empty"><div class="empty-icon">📋</div><h4>No appointments yet</h4><p>Book your first appointment above</p></div>
@@ -270,7 +313,8 @@
       <button class="admin-tab" onclick="adminTab('members',this)">👥 All Members</button>
       <button class="admin-tab" onclick="adminTab('whatsapp',this)">📱 WhatsApp / SMS</button>
       <button class="admin-tab" onclick="adminTab('sheets',this)">📊 Google Sheets</button>
-      <button class="admin-tab" onclick="adminTab('voice',this)">🎙️ Voice Agent</button>
+      <button class="admin-tab" onclick="adminTab('callbookings',this)">📞 Call Bookings</button>
+      <button class="admin-tab blood-tab" id="blood-req-tab" onclick="adminTab('blood',this)">🩸 Blood Requests <span class="blood-notif-badge" id="blood-notif-badge" style="display:none">0</span></button>
     </div>
 
     <!-- DATA TABLE — shown for appointments / today / members tabs -->
@@ -504,146 +548,326 @@
       </div>
     </div>
 
-    <!-- ═══════════ VOICE AGENT SECTION (admin only) ═══════════ -->
-    <div id="admin-voice-section" style="display:none">
+    <!-- ═══════════ CALL BOOKINGS SECTION ════════════════════ -->
+    <!-- ═══════════ CALL BOOKINGS SECTION ════════════════════ -->
+    <div id="admin-callbookings-section" style="display:none">
 
-      <!-- Voice hero -->
-      <div class="voice-hero">
-        <div class="voice-hero-icon">🎙️</div>
+      <div class="voice-hero" style="background:linear-gradient(135deg,#3b0764,#1e3a8a)">
+        <div class="voice-hero-icon">📞</div>
         <div>
-          <h2>Voice Agent Integration</h2>
-          <p>AI-powered outbound/inbound voice assistant for your patients. All registered member phone numbers are listed below — ready for your voice platform campaigns.</p>
+          <h2>Call Bookings</h2>
+          <p>Voice call requests and appointments booked via AI call — manage, track, and remove entries from here.</p>
         </div>
       </div>
 
-      <!-- Member phone directory — all registered patients with details -->
+      <!-- Stats -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:22px">
+        <div class="admin-stat purple"><div class="admin-stat-num" id="cb-stat-total">0</div><div class="admin-stat-label">Total Requests</div></div>
+        <div class="admin-stat green"><div class="admin-stat-num" id="cb-stat-today">0</div><div class="admin-stat-label">Today</div></div>
+        <div class="admin-stat blue"><div class="admin-stat-num" id="cb-stat-upcoming">0</div><div class="admin-stat-label">Called</div></div>
+        <div class="admin-stat amber"><div class="admin-stat-num" id="cb-stat-pending">0</div><div class="admin-stat-label">Pending</div></div>
+      </div>
+
+      <!-- ── PART 1: Voice Call Requests ────────────────────── -->
       <div class="form-card" style="margin-bottom:22px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:10px">
           <div>
-            <h3 style="margin-bottom:3px">📞 Registered Member Directory</h3>
-            <p style="font-size:13px;color:var(--muted)">Every patient who has registered — name, email, phone, and booking count.</p>
+            <h3 style="margin-bottom:3px">📋 Voice Call Requests</h3>
+            <p style="font-size:13px;color:var(--muted)">Patients who clicked "Call Me Now" — use <strong>Remove</strong> once their appointment is booked.</p>
           </div>
-          <div id="voice-member-count" style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--accent2)">0 members</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <input type="text" id="cb-search" placeholder="Search name, phone, email…" oninput="renderCallBookingsTable()"
+              style="padding:8px 13px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;width:200px">
+            <button onclick="renderCallBookingsTable()"
+              style="padding:8px 14px;background:var(--accent2);color:#fff;border:none;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">🔄 Refresh</button>
+            <button onclick="exportCallBookingsCSV()"
+              style="padding:8px 14px;background:#059669;color:#fff;border:none;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">⬇️ CSV</button>
+          </div>
+        </div>
+        <div class="filter-bar" style="margin-bottom:16px">
+          <button class="filter-btn active" onclick="filterCallBookings('all',this)">All</button>
+          <button class="filter-btn" onclick="filterCallBookings('today',this)">Today</button>
+          <button class="filter-btn" onclick="filterCallBookings('upcoming',this)">Called</button>
+          <button class="filter-btn" onclick="filterCallBookings('completed',this)">Booked</button>
         </div>
         <div style="overflow-x:auto">
           <table>
             <thead>
-              <tr>
-                <th>#</th>
-                <th>Full Name</th>
-                <th>Email</th>
-                <th>📞 Phone / WhatsApp</th>
-                <th>Registered On</th>
-                <th>Total Bookings</th>
-                <th>Last Booking</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
+              <tr><th>Name</th><th>Email</th><th>Phone</th><th>Requested At</th><th>Status</th><th>Actions</th></tr>
             </thead>
-            <tbody id="voice-member-table"></tbody>          </table>
+            <tbody id="call-bookings-table">
+              <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px"><div style="font-size:32px;margin-bottom:8px">📞</div>No voice call requests yet</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <!-- Voice agent embed slot -->
+      <!-- ── PART 2: AI-Booked Appointments (from Google Sheets) ── -->
+      <div class="form-card" style="margin-bottom:22px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:10px">
+          <div>
+            <h3 style="margin-bottom:3px">🤖 Appointments Booked via AI Call</h3>
+            <p style="font-size:13px;color:var(--muted)">Patients whose appointment was fully booked through the AI voice call — fetched live from Google Sheets.</p>
+          </div>
+          <button onclick="loadAICallAppointments()"
+            style="padding:8px 14px;background:var(--accent2);color:#fff;border:none;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">🔄 Refresh</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr><th>Name</th><th>Phone</th><th>Hospital</th><th>Dept</th><th>Date</th><th>Slot</th><th>Requested At</th><th>Action</th></tr>
+            </thead>
+            <tbody id="ai-call-appts-table">
+              <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px"><div style="font-size:32px;margin-bottom:8px">🤖</div>Click Refresh to load AI-booked appointments</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── PART 3: Cancelled Bookings ─────────────────────── -->
       <div class="form-card">
-        <h3 style="margin-bottom:16px">🔌 Voice Agent Embed</h3>
-        <div class="voice-integration-info">
-          <div class="voice-int-step">
-            <div class="voice-int-num">1</div>
-            <div><strong>Choose a platform</strong><span>ElevenLabs, Vapi.ai, Bland AI, Retell AI, or custom API</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:10px">
+          <div>
+            <h3 style="margin-bottom:3px">❌ Cancelled Bookings</h3>
+            <p style="font-size:13px;color:var(--muted)">All appointments with cancelled status — remove individual entries to keep the list clean.</p>
           </div>
-          <div class="voice-int-step">
-            <div class="voice-int-num">2</div>
-            <div><strong>Get your embed code</strong><span>Copy the script tag / iframe from your voice dashboard</span></div>
-          </div>
-          <div class="voice-int-step">
-            <div class="voice-int-num">3</div>
-            <div><strong>Paste in index.html</strong><span>Replace the placeholder div below with your embed code</span></div>
+          <button onclick="loadCancelledBookings()"
+            style="padding:8px 14px;background:#6b7280;color:#fff;border:none;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">🔄 Refresh</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr><th>Token</th><th>Patient</th><th>Phone</th><th>Hospital</th><th>Dept</th><th>Date</th><th>Action</th></tr>
+            </thead>
+            <tbody id="cancelled-bookings-table">
+              <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:32px"><div style="font-size:32px;margin-bottom:8px">❌</div>Click Refresh to load cancelled bookings</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /admin-callbookings-section -->
+
+    <!-- ═══════════ ADMIN BLOOD REQUESTS PANEL ═══════════════ -->
+    <div id="admin-blood-section" style="display:none">
+      <div class="blood-admin-hero">
+        <div class="blood-hero-icon" style="font-size:40px">🩸</div>
+        <div>
+          <h2>Blood Requests — All Incoming</h2>
+          <p>All urgent blood requests submitted by patients are shown here in real-time.</p>
+        </div>
+      </div>
+      <div class="section-title" style="margin-top:0;margin-bottom:14px">Incoming Blood Requests</div>
+      <div id="admin-blood-list">
+        <div class="empty"><div class="empty-icon">🩸</div><h4>No blood requests yet</h4><p>When patients submit a blood request, it will appear here instantly.</p></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE: BLOOD DONATION ════════════════ -->
+<div class="page" id="page-blood">
+  <div class="dash-wrap" style="max-width:900px">
+
+    <!-- Enhanced Hero -->
+    <div class="blood-hero-enhanced">
+      <div class="blood-hero-bg-circles">
+        <div class="bh-circle bh-c1"></div>
+        <div class="bh-circle bh-c2"></div>
+      </div>
+      <div class="blood-hero-content">
+        <div class="blood-hero-left">
+          <div class="blood-hero-badge">🩸 Blood Donation Centre</div>
+          <h2>Every Drop<br><span>Saves a Life</span></h2>
+          <p>Donate blood or send an urgent request to find a matching donor near you. Our network connects donors and patients instantly.</p>
+          <div class="blood-hero-stats">
+            <div class="bh-stat"><div class="bh-stat-num">500+</div><div class="bh-stat-label">Donors</div></div>
+            <div class="bh-stat-div"></div>
+            <div class="bh-stat"><div class="bh-stat-num">8</div><div class="bh-stat-label">Blood Types</div></div>
+            <div class="bh-stat-div"></div>
+            <div class="bh-stat"><div class="bh-stat-num">24/7</div><div class="bh-stat-label">Available</div></div>
           </div>
         </div>
+        <div class="blood-hero-drop">
+          <div class="blood-drop-anim">🩸</div>
+          <div class="blood-drop-rings"></div>
+        </div>
+      </div>
+    </div>
 
-        <!-- Make.com Webhook config — live editable -->
-        <div style="margin:20px 0;background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.2);border-radius:12px;padding:16px 20px">
-          <h4 style="margin:0 0 6px;font-size:14px;font-weight:700;color:var(--accent2)">⚡ Make.com Webhook — Auto-trigger on every booking</h4>
-          <p style="font-size:13px;color:var(--muted);margin:0 0 12px">Paste your Make.com (or Zapier / n8n) webhook URL below. DiagnoLens will POST the full appointment data to this URL on every new booking — use it to trigger automated voice calls, SMS, CRM updates, and more.</p>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <input type="url" id="make-webhook-input"
-              placeholder="https://hook.eu1.make.com/xxxxxxxxxx"
-              style="flex:1;min-width:220px;padding:9px 13px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
-            <button onclick="saveMakeWebhookUrl()"
-              style="padding:9px 18px;background:var(--accent2);color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">💾 Save URL</button>
-          </div>
-          <div id="make-webhook-status" style="margin-top:8px;font-size:12px;color:var(--muted)">Not configured</div>
-          <div style="margin-top:10px;background:var(--surface);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);font-family:monospace">
-            POST payload: { token, patientName, phone, email, hospital, dept, city, date, slot, bookedAt, apptId }
-          </div>
-          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-            <span class="int-tag">Make.com</span>
-            <span class="int-tag">Zapier</span>
-            <span class="int-tag">n8n</span>
-            <span class="int-tag">Any Webhook</span>
+    <!-- Action Cards Enhanced -->
+    <div class="blood-action-grid-v2">
+      <div class="blood-action-v2 donate-v2" onclick="showBloodSection('donate')">
+        <div class="bav2-icon-wrap donate-icon-wrap">
+          <span style="font-size:24px">❤️</span>
+        </div>
+        <div class="bav2-body">
+          <h3>Become a Donor</h3>
+          <p>Register yourself as a blood donor and help save lives in your city.</p>
+          <div class="bav2-chips">
+            <span class="bav2-chip">✓ Free</span>
+            <span class="bav2-chip">✓ Admin verified</span>
+            <span class="bav2-chip">✓ Private</span>
           </div>
         </div>
+        <div class="bav2-cta donate-cta">Register <span>→</span></div>
+      </div>
+      <div class="blood-action-v2 search-v2" onclick="showBloodSection('search')">
+        <div class="bav2-icon-wrap search-icon-wrap">
+          <span style="font-size:24px">🔍</span>
+        </div>
+        <div class="bav2-body">
+          <h3>Request Blood — Urgent</h3>
+          <p>Need blood urgently? Notify all donors and admins instantly.</p>
+          <div class="bav2-chips">
+            <span class="bav2-chip">✓ Instant alert</span>
+            <span class="bav2-chip">✓ All notified</span>
+            <span class="bav2-chip">✓ Priority</span>
+          </div>
+        </div>
+        <div class="bav2-cta search-cta">Send Request <span>→</span></div>
+      </div>
+    </div>
 
-        <!-- Voice Agent — Send message via Make.com Webhook -->
-        <div id="voice-embed-slot" style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:22px 24px">
-          <h4 style="margin:0 0 4px;font-size:15px;font-weight:700">🎙️ Send Patient to Voice Agent</h4>
-          <p style="font-size:13px;color:var(--muted);margin:0 0 18px">Enter a patient's details below and fire the Make.com webhook to trigger your automated voice/SMS workflow instantly.</p>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Patient Name</label>
-              <input type="text" id="voice-agent-name" placeholder="Arjun Sharma">
-            </div>
-            <div class="form-group">
-              <label>Phone Number <span style="color:var(--rose)">*</span></label>
-              <input type="tel" id="voice-agent-phone" placeholder="+91 98765 43210">
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Token / Appointment ID</label>
-              <input type="text" id="voice-agent-token" placeholder="e.g. FOR-CAR-001">
-            </div>
-            <div class="form-group">
-              <label>Hospital</label>
-              <input type="text" id="voice-agent-hospital" placeholder="e.g. Fortis Delhi">
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Appointment Date</label>
-              <input type="date" id="voice-agent-date">
-            </div>
-            <div class="form-group">
-              <label>Time Slot</label>
-              <input type="text" id="voice-agent-slot" placeholder="e.g. 10:30">
-            </div>
+    <!-- Blood Type Quick Guide -->
+    <div class="blood-type-guide">
+      <div class="btg-header">
+        <span class="btg-title">🩸 Blood Type Compatibility</span>
+        <span class="btg-sub">Quick reference guide</span>
+      </div>
+      <div class="btg-grid">
+        <div class="btg-card" data-type="A+"><div class="btg-type">A+</div><div class="btg-label">Can give to A+, AB+</div></div>
+        <div class="btg-card" data-type="A-"><div class="btg-type">A−</div><div class="btg-label">Universal donor for A types</div></div>
+        <div class="btg-card" data-type="B+"><div class="btg-type">B+</div><div class="btg-label">Can give to B+, AB+</div></div>
+        <div class="btg-card" data-type="B-"><div class="btg-type">B−</div><div class="btg-label">Universal donor for B types</div></div>
+        <div class="btg-card highlight-card" data-type="O-"><div class="btg-type">O−</div><div class="btg-label">🌟 Universal Donor</div></div>
+        <div class="btg-card" data-type="O+"><div class="btg-type">O+</div><div class="btg-label">Most common type</div></div>
+        <div class="btg-card" data-type="AB+"><div class="btg-type">AB+</div><div class="btg-label">🌟 Universal Recipient</div></div>
+        <div class="btg-card" data-type="AB-"><div class="btg-type">AB−</div><div class="btg-label">Rare — critical need</div></div>
+      </div>
+    </div>
+    <div id="blood-donate-section" style="display:none">
+      <div class="form-card">
+        <h3 style="margin-bottom:6px">❤️ Register as Blood Donor</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:20px">Your details will be visible to hospital admins when patients need your blood group.</p>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Blood Group <span style="color:var(--rose)">*</span></label>
+            <select id="donor-blood-group" style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;background:var(--surface)">
+              <option value="">— Select —</option>
+              <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+              <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+            </select>
           </div>
           <div class="form-group">
-            <label>Custom Message / Note (optional)</label>
-            <textarea id="voice-agent-message" rows="3"
-              style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;resize:vertical;outline:none"
-              placeholder="Any extra instruction for the voice agent workflow…"></textarea>
+            <label>City <span style="color:var(--rose)">*</span></label>
+            <input type="text" id="donor-city" placeholder="e.g. Delhi">
           </div>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-            <button onclick="triggerVoiceAgentWebhook()"
-              style="padding:11px 24px;background:var(--accent2);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">
-              ⚡ Trigger Webhook
-            </button>
-            <button onclick="clearVoiceAgentForm()"
-              class="btn-secondary" style="padding:10px 18px;font-size:13px">🗑 Clear</button>
-          </div>
-          <div id="voice-agent-result" style="margin-top:12px;font-size:13px;display:none"></div>
         </div>
-
-        <div class="voice-prompt-box">
-          <strong>💡 Suggested System Prompt for your Voice Agent:</strong><br>
-          <em>"You are DiagnoLens, an AI healthcare assistant. Help patients book OPD appointments, check queue status, get hospital info, and answer health queries in Hindi and English. Available hospitals include Fortis, AIIMS, Apollo, Max, Medanta across Delhi, Mumbai, Bangalore, Chennai, Hyderabad and more."</em>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Your Name</label>
+            <input type="text" id="donor-name" placeholder="Full name">
+          </div>
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="tel" id="donor-phone" placeholder="+91 98765 43210">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Last Donated (optional)</label>
+          <input type="date" id="donor-last-date">
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
+          <button class="btn-blood-reg" onclick="registerDonor()">🩸 Register as Donor</button>
+          <button class="btn-secondary" style="padding:10px 18px;font-size:13px" onclick="hideBloodSections()">Cancel</button>
         </div>
       </div>
+    </div>
+    <div id="blood-search-section" style="display:none">
+      <div class="form-card">
+        <h3 style="margin-bottom:6px">🔍 Request Blood — Urgent</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:20px">Fill in the details below. Your request will be sent as a <strong>notification to all admins</strong> immediately.</p>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Blood Group Required <span style="color:var(--rose)">*</span></label>
+            <select id="req-blood-group" style="width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;background:var(--surface)">
+              <option value="">— Select —</option>
+              <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+              <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Units Required <span style="color:var(--rose)">*</span></label>
+            <input type="number" id="req-units" placeholder="e.g. 2" min="1" max="10">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Patient Name <span style="color:var(--rose)">*</span></label>
+            <input type="text" id="req-patient-name" placeholder="Full name">
+          </div>
+          <div class="form-group">
+            <label>Contact Number <span style="color:var(--rose)">*</span></label>
+            <input type="tel" id="req-contact" placeholder="+91 98765 43210">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Hospital / Location <span style="color:var(--rose)">*</span></label>
+            <input type="text" id="req-hospital" placeholder="e.g. AIIMS Delhi">
+          </div>
+          <div class="form-group">
+            <label>City <span style="color:var(--rose)">*</span></label>
+            <input type="text" id="req-city" placeholder="e.g. Delhi">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Urgency Level</label>
+          <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:4px">
+            <button class="urgency-btn active" data-level="Critical" onclick="selectUrgency(this)">🔴 Critical</button>
+            <button class="urgency-btn" data-level="High" onclick="selectUrgency(this)">🟠 High</button>
+            <button class="urgency-btn" data-level="Medium" onclick="selectUrgency(this)">🟡 Medium</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Additional Notes (optional)</label>
+          <textarea id="req-notes" rows="3" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;resize:vertical;outline:none" placeholder="Any additional info for the donor/admin..."></textarea>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
+          <button class="btn-blood-req" onclick="submitBloodRequest()">📢 Send Request to All Admins</button>
+          <button class="btn-secondary" style="padding:10px 18px;font-size:13px" onclick="hideBloodSections()">Cancel</button>
+        </div>
+      </div>
+    </div>
+    <div class="section-title" style="margin-top:24px">My Blood Requests</div>
+    <div id="my-blood-requests">
+      <div class="empty"><div class="empty-icon">🩸</div><h4>No requests yet</h4><p>Submit a blood request above and it will appear here</p></div>
+    </div>
+  </div>
+</div>
 
-    </div><!-- /admin-voice-section -->
-
+<!-- ═══════════════ BLOOD REQUEST NOTIFICATION POPUP ════════ -->
+<div class="blood-notif-overlay" id="blood-notif-overlay" style="display:none">
+  <div class="blood-notif-popup">
+    <div class="bnp-header">
+      <div class="bnp-alert-icon">🚨</div>
+      <div>
+        <div class="bnp-title">Urgent Blood Request!</div>
+        <div class="bnp-subtitle" id="bnp-from-name">Someone needs your help</div>
+      </div>
+    </div>
+    <div style="text-align:center">
+      <div class="bnp-blood-badge" id="bnp-blood-group">—</div>
+    </div>
+    <div class="bnp-details" id="bnp-details">
+      Loading request details…
+    </div>
+    <div class="bnp-actions">
+      <button class="bnp-btn-accept" onclick="acceptBloodRequest()">✅ I Can Help — Accept</button>
+      <button class="bnp-btn-decline" onclick="declineBloodRequest()">✕ Decline</button>
+    </div>
   </div>
 </div>
 
@@ -683,48 +907,7 @@
   </div>
 </div>
 
-<!-- ════════════════ PAGE: WHATSAPP ALERTS ══════════════════ -->
-<div class="page" id="page-whatsapp">
-  <div class="dash-wrap" style="max-width:820px">
-    <div class="wa-hero">
-      <div class="wa-hero-icon">📱</div>
-      <div>
-        <h2>WhatsApp Alerts</h2>
-        <p>Booking confirmations are sent directly to your WhatsApp. Tap "Open WhatsApp" on any alert.</p>
-      </div>
-    </div>
-    <div class="wa-status-card">
-      <div class="wa-status-left">
-        <div class="wa-status-icon">📞</div>
-        <div>
-          <div class="wa-status-title">Your WhatsApp Number</div>
-          <div class="wa-status-sub" id="wa-phone-display">Not set</div>
-        </div>
-      </div>
-      <button class="btn-green" onclick="sendTestWhatsApp()">📤 Send Test Message</button>
-    </div>
-    <div class="wa-setup-box">
-      <h4>📋 How WhatsApp Alerts Work</h4>
-      <ol>
-        <li>Every booking confirmation is <strong>automatically logged</strong> in the Alert Log below</li>
-        <li>Click <strong>"Open WhatsApp"</strong> on any alert to send the pre-filled message from your device</li>
-        <li>Works on mobile (opens WhatsApp app) and desktop (opens WhatsApp Web)</li>
-        <li>✅ All alert history is stored on this device and visible in the Alert Log</li>
-      </ol>
-    </div>
-    <div class="wa-status-card">
-      <div class="wa-status-left">
-        <div class="wa-status-icon">💾</div>
-        <div><div class="wa-status-title">Local Alert Logging</div><div class="wa-status-sub">All booking alerts are stored on this device instantly</div></div>
-      </div>
-      <span class="wa-pill-green">Active</span>
-    </div>
-    <div class="section-title" style="margin-top:8px">Alert Log</div>
-    <div class="alert-log" id="wa-alert-log">
-      <div class="empty"><div class="empty-icon">💬</div><h4>No alerts yet</h4><p>Alerts are auto-sent when a booking is confirmed</p></div>
-    </div>
-  </div>
-</div>
+
 
 <!-- ═══════════════ PAGE: VIDEO CONSULTATION ════════════════ -->
 <div class="page" id="page-video">
@@ -781,6 +964,246 @@
   </div>
 </div>
 
-<script src="script.js"></script>
+
+<!-- ═══════════════ PAGE: AI PRESCRIPTION READER ════════════ -->
+<div class="page" id="page-rx">
+  <div class="dash-wrap" style="max-width:900px">
+
+    <!-- Hero -->
+    <div class="rx-hero">
+      <div class="rx-hero-icon">🤖</div>
+      <div>
+        <h2>AI Medical Intelligence</h2>
+        <p>Scan-based disease detection powered by deep learning, plus AI-powered prescription reading — all in one place.</p>
+      </div>
+    </div>
+
+    <!-- Mode Toggle -->
+    <div class="rx-mode-toggle-wrap">
+      <div class="rx-mode-toggle" id="rx-mode-toggle">
+        <button class="rx-mode-btn active" id="rx-mode-scan-btn" onclick="switchRxMode('scan')">
+          <span class="rx-mode-icon">🫁</span>
+          <span class="rx-mode-text">
+            <strong>Disease Detection</strong>
+            <small>From Medical Scans</small>
+          </span>
+        </button>
+        <button class="rx-mode-btn" id="rx-mode-report-btn" onclick="switchRxMode('report')">
+          <span class="rx-mode-icon">💊</span>
+          <span class="rx-mode-text">
+            <strong>Prescription Reader</strong>
+            <small>From Reports / Prescription</small>
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ════════ SECTION 1: SCAN-BASED DISEASE DETECTION ════════ -->
+    <div id="rx-scan-section">
+
+      <!-- Info Banner -->
+      <div class="scan-info-banner" id="scan-info-banner">
+        <div class="sib-icon">🧠</div>
+        <div class="sib-body">
+          <div class="sib-title" id="sib-title-text">AI Scan Analysis — Powered by DiagnoLens Model</div>
+          <div class="sib-sub" id="sib-sub-text">Upload a chest X-ray or scan. Our deployed deep learning model detects <strong>COVID-19</strong>, <strong>Pneumonia</strong>, <strong>Lung Opacity</strong>, and <strong>Normal</strong> conditions with high accuracy.</div>
+        </div>
+        <div class="sib-badge">LIVE MODEL</div>
+      </div>
+
+      <!-- Scan Type Selection -->
+      <div class="form-card" style="margin-bottom:18px">
+        <h3 style="margin-bottom:16px">🫁 Select Scan Type</h3>
+        <div class="scan-type-grid" style="grid-template-columns:1fr 1fr">
+          <div class="scan-type-card active" data-scan="chest" onclick="selectScanType(this,'chest')">
+            <div class="stc-icon">🫁</div>
+            <div class="stc-name">Chest X-Ray</div>
+            <div class="stc-sub">COVID, Pneumonia, Lung Opacity, Normal</div>
+            <div class="stc-badge available">✓ Model Live</div>
+          </div>
+          <div class="scan-type-card" data-scan="blood" onclick="selectScanType(this,'blood')">
+            <div class="stc-icon">🩸</div>
+            <div class="stc-name">Blood Report</div>
+            <div class="stc-sub">Malaria, Typhoid &amp; more detection</div>
+            <div class="stc-badge available">✓ Model Live</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload & Analyze -->
+      <div class="form-card" id="scan-upload-card">
+        <h3 id="scan-upload-title" style="margin-bottom:6px">📤 Upload Scan Image</h3>
+        <p id="scan-upload-desc" style="font-size:13px;color:var(--muted);margin-bottom:18px">Upload a clear chest X-ray image. The AI model will analyze it and return a diagnosis with confidence score.</p>
+
+        <div class="scan-drop-zone" id="scan-drop-zone" onclick="document.getElementById('scan-file-input').click()">
+          <div id="scan-drop-inner">
+            <div class="scan-drop-icon">🏥</div>
+            <h4>Click to upload X-ray / Scan</h4>
+            <p>Supports JPG, PNG — Max 10MB</p>
+          </div>
+          <img id="scan-preview-img" style="display:none;max-width:100%;max-height:260px;border-radius:12px;object-fit:contain" />
+          <input type="file" id="scan-file-input" accept="image/*,.pdf" style="display:none" onchange="handleScanFile(event)">
+        </div>
+
+        <div id="scan-file-info" style="display:none;margin-top:12px;padding:10px 14px;background:rgba(37,99,235,.06);border-radius:9px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px">
+          <span>📄</span><span id="scan-file-name"></span>
+          <button onclick="clearScanInput()" style="margin-left:auto;padding:3px 10px;border:1px solid var(--border);border-radius:6px;font-size:11px;cursor:pointer;background:#fff;color:var(--muted)">✕ Clear</button>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+          <button class="btn-scan-analyze" id="scan-analyze-btn" onclick="analyzeScan()">
+            🔬 Analyze Scan
+          </button>
+          <button class="btn-secondary" style="padding:10px 18px;font-size:13px" onclick="clearScanInput()">🗑 Clear</button>
+        </div>
+      </div>
+
+      <!-- Scan Loading -->
+      <div id="scan-loading" style="display:none">
+        <div class="rx-loading-card">
+          <div class="rx-loading-icon">🔬</div>
+          <h4>AI Model Analyzing Scan…</h4>
+          <p>Running deep learning inference — please wait</p>
+          <div class="rx-loading-bar"><div class="rx-loading-fill"></div></div>
+        </div>
+      </div>
+
+      <!-- Scan Results -->
+      <div id="scan-result" style="display:none">
+        <div class="scan-result-card">
+
+          <!-- Header row -->
+          <div class="src-header">
+            <div class="src-title">🔬 Scan Analysis Result</div>
+            <button class="btn-secondary" style="padding:7px 15px;font-size:12px" onclick="clearScanResult()">🔄 New Scan</button>
+          </div>
+
+          <div class="src-body">
+            <!-- Dark hero: icon + condition name + status pill -->
+            <div class="src-prediction-wrap">
+              <div class="src-pred-icon-box">
+                <span class="src-pred-icon" id="src-pred-icon">🫁</span>
+              </div>
+              <div class="src-pred-text">
+                <div class="src-pred-label">Detected Condition</div>
+                <div class="src-pred-value" id="src-pred-value">—</div>
+                <div class="src-pred-pill" id="src-pred-pill">AI Analysis Complete</div>
+              </div>
+            </div>
+
+            <!-- Confidence score row (X-Ray only, hidden for blood) -->
+            <div class="src-confidence-wrap" id="src-confidence-wrap">
+              <div class="src-conf-top">
+                <div class="src-conf-label">Model Confidence</div>
+                <div class="src-conf-pct" id="src-conf-pct">—</div>
+              </div>
+              <div class="src-conf-bar-wrap">
+                <div class="src-conf-bar"><div class="src-conf-fill" id="src-conf-fill"></div></div>
+              </div>
+              <div class="src-conf-hint" id="src-conf-hint"></div>
+            </div>
+
+            <!-- Detail content: injected by JS (blood cards / xray breakdown) -->
+            <div class="src-all-predictions" id="src-all-predictions"></div>
+          </div>
+
+          <!-- Disclaimer -->
+          <div class="src-disclaimer">
+            ⚠️ <strong>Clinical Disclaimer:</strong> This AI analysis is for screening purposes only. Always consult a qualified radiologist or physician for diagnosis and treatment decisions.
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Coming Soon placeholder for non-chest scans -->
+      <div id="scan-coming-soon" style="display:none">
+        <div class="form-card" style="text-align:center;padding:52px 24px">
+          <div style="font-size:52px;margin-bottom:14px">🚧</div>
+          <h3 style="font-family:'Syne',sans-serif;margin-bottom:8px">Model Coming Soon</h3>
+          <p style="color:var(--muted);font-size:14px;max-width:380px;margin:0 auto">We are currently training and validating the model for this scan type. Check back soon!</p>
+        </div>
+      </div>
+
+    </div><!-- /rx-scan-section -->
+
+    <!-- ════════ SECTION 2: PRESCRIPTION READER ════════════════ -->
+    <div id="rx-prescription-section" style="display:none">
+
+      <!-- Input Options -->
+      <div class="rx-input-tabs">
+        <button class="rx-tab active" onclick="switchRxTab('upload', this)">📷 Upload Image</button>
+        <button class="rx-tab" onclick="switchRxTab('text', this)">✍️ Type / Paste Text</button>
+      </div>
+
+      <!-- Upload Section -->
+      <div id="rx-upload-section">
+        <div class="rx-drop-zone" id="rx-drop-zone" onclick="document.getElementById('rx-file-input').click()">
+          <div class="rx-drop-icon">📄</div>
+          <h4>Click to upload or drag &amp; drop</h4>
+          <p>Supports JPG, PNG, PDF — Max 5MB</p>
+          <input type="file" id="rx-file-input" accept="image/*,.pdf" style="display:none" onchange="handleRxFile(event)">
+        </div>
+        <div id="rx-preview-wrap" style="display:none">
+          <img id="rx-preview-img" style="max-width:100%;border-radius:12px;border:1px solid var(--border);margin-top:12px" />
+          <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+            <button class="btn-rx-analyze" onclick="analyzeRxImage()">🤖 Analyze Prescription</button>
+            <button class="btn-secondary" style="padding:10px 18px;font-size:13px" onclick="clearRxInput()">🗑 Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Text Section -->
+      <div id="rx-text-section" style="display:none">
+        <div class="form-card" style="margin-bottom:0">
+          <div class="form-group">
+            <label>Paste your prescription text below</label>
+            <textarea id="rx-text-input" rows="8"
+              style="width:100%;padding:13px 15px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;resize:vertical;outline:none;line-height:1.7"
+              placeholder="e.g.&#10;Tab. Amoxicillin 500mg — 1-0-1 x 5 days&#10;Tab. Paracetamol 650mg — SOS&#10;Syrup Benadryl 10ml — 0-0-1&#10;..."></textarea>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
+            <button class="btn-rx-analyze" onclick="analyzeRxText()">🤖 Analyze Prescription</button>
+            <button class="btn-secondary" style="padding:10px 18px;font-size:13px" onclick="document.getElementById('rx-text-input').value=''">🗑 Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div id="rx-loading" style="display:none">
+        <div class="rx-loading-card">
+          <div class="rx-loading-icon">🧠</div>
+          <h4>AI is reading your prescription…</h4>
+          <p>Analyzing medicines, dosage &amp; instructions</p>
+          <div class="rx-loading-bar"><div class="rx-loading-fill"></div></div>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div id="rx-result" style="display:none">
+        <div class="rx-result-header">
+          <div>
+            <h3>📋 Prescription Analysis</h3>
+            <p style="font-size:13px;color:var(--muted);margin-top:4px">AI-powered reading — always consult your doctor for medical decisions</p>
+          </div>
+          <button class="btn-secondary" style="padding:8px 16px;font-size:13px" onclick="clearRxResult()">🔄 New Scan</button>
+        </div>
+        <div class="rx-summary-card" id="rx-summary"></div>
+        <div class="section-title" style="margin-top:20px">💊 Medicines Breakdown</div>
+        <div id="rx-medicines-list"></div>
+        <div id="rx-instructions-wrap" style="display:none">
+          <div class="section-title" style="margin-top:20px">📌 General Instructions</div>
+          <div class="rx-instructions-card" id="rx-instructions"></div>
+        </div>
+        <div class="rx-disclaimer">
+          ⚠️ <strong>Medical Disclaimer:</strong> This AI analysis is for informational purposes only. Always follow your doctor's advice and consult a licensed pharmacist before taking any medication.
+        </div>
+      </div>
+
+    </div><!-- /rx-prescription-section -->
+
+  </div>
+</div>
+
+<script type="module" src="script.js"></script>
 </body>
 </html>
