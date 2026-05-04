@@ -183,6 +183,8 @@ tbody tr:hover{background:rgba(37,99,235,.025)}
 .filter-bar{display:flex;gap:7px;flex-wrap:wrap}
 .filter-btn{padding:5px 14px;border-radius:100px;border:1.5px solid var(--border);background:#fff;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif}
 .filter-btn.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.ai-filter-btn{border-color:rgba(124,58,237,.3);color:var(--accent2)}
+.ai-filter-btn.active{background:linear-gradient(135deg,#7c3aed,#2563eb);border-color:transparent;color:#fff}
 
 /* ─── MODAL ──────────────────────────────────────────────── */
 .modal-overlay{position:fixed;inset:0;background:rgba(13,13,20,.55);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
@@ -362,3 +364,283 @@ tbody tr:hover{background:rgba(37,99,235,.025)}
 
 /* ─── SHEETS / WA HERO ───────────────────────────────────── */
 .admin-section-hero{border-radius:18px;padding:26px 28px;color:#fff;margin-bottom:24px;display:flex;align-items:center;gap:18px}
+/* ─── BLOOD DONATION ─────────────────────────────────────── */
+.blood-hero{background:linear-gradient(135deg,#be123c,#e11d48);border-radius:18px;padding:26px 28px;color:#fff;margin-bottom:24px;display:flex;align-items:center;gap:18px}
+.blood-hero-icon{font-size:44px;flex-shrink:0}
+.blood-hero h2{font-family:'Syne',sans-serif;font-size:21px;font-weight:800;margin-bottom:4px}
+.blood-hero p{color:rgba(255,255,255,.75);font-size:13px;line-height:1.6}
+.blood-action-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.blood-action-card{background:#fff;border:2px solid var(--border);border-radius:18px;padding:28px 24px;text-align:center;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
+.blood-action-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .25s}
+.donate-card::before{background:linear-gradient(135deg,rgba(225,29,72,.05),rgba(190,18,60,.05))}
+.search-card::before{background:linear-gradient(135deg,rgba(37,99,235,.05),rgba(124,58,237,.05))}
+.blood-action-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+.donate-card:hover{border-color:var(--rose)}
+.search-card:hover{border-color:var(--accent)}
+.blood-action-card:hover::before{opacity:1}
+.blood-action-icon{font-size:40px;margin-bottom:12px}
+.blood-action-card h3{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-bottom:8px;color:var(--ink)}
+.blood-action-card p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:18px}
+.blood-action-btn{display:inline-flex;align-items:center;padding:9px 20px;border-radius:100px;font-size:13px;font-weight:700;font-family:'DM Sans',sans-serif}
+.donate-btn{background:rgba(225,29,72,.1);color:var(--rose)}
+.search-btn{background:rgba(37,99,235,.1);color:var(--accent)}
+.urgency-btn{padding:8px 16px;border:1.5px solid var(--border);border-radius:100px;background:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;color:var(--muted)}
+.urgency-btn.active{border-color:var(--rose);background:rgba(225,29,72,.08);color:var(--rose)}
+.btn-blood{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:linear-gradient(135deg,var(--rose),#be123c);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .2s}
+.btn-blood:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(225,29,72,.3)}
+.btn-blood-reg{display:inline-flex;align-items:center;gap:8px;padding:11px 24px;background:linear-gradient(135deg,var(--rose),#be123c);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .2s}
+.btn-blood-reg:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(225,29,72,.35)}
+.btn-blood-req{display:inline-flex;align-items:center;gap:8px;padding:11px 24px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .2s}
+.btn-blood-req:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(37,99,235,.35)}
+.feat-card.blood-feat-card{border-color:rgba(225,29,72,.2);background:rgba(255,255,255,.85)}
+.feat-card.blood-feat-card:hover{border-color:var(--rose)}
+
+/* ─── BLOOD REQUEST CARDS ─────────────────────────────────── */
+.blood-req-card{background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:12px;position:relative;transition:box-shadow .2s}
+.blood-req-card:hover{box-shadow:var(--shadow)}
+.blood-req-card.critical{border-left:4px solid var(--rose)}
+.blood-req-card.high{border-left:4px solid var(--amber)}
+.blood-req-card.medium{border-left:4px solid var(--green)}
+.blood-req-top{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.blood-group-badge{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;background:linear-gradient(135deg,var(--rose),#be123c);color:#fff;padding:6px 14px;border-radius:10px;min-width:56px;text-align:center}
+.blood-req-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--ink)}
+.blood-req-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.blood-urgency-tag{padding:4px 12px;border-radius:100px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-left:auto}
+.urgency-critical{background:rgba(225,29,72,.1);color:var(--rose)}
+.urgency-high{background:rgba(217,119,6,.1);color:var(--amber)}
+.urgency-medium{background:rgba(5,150,105,.1);color:var(--green)}
+.blood-req-details{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--muted)}
+.blood-req-detail{display:flex;align-items:center;gap:5px}
+.blood-req-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.blood-req-time{position:absolute;top:16px;right:16px;font-size:11px;color:var(--muted)}
+.blood-notif-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--rose);color:#fff;font-size:10px;font-weight:800;border-radius:100px;min-width:18px;height:18px;padding:0 5px;margin-left:5px;animation:pulse 2s ease-in-out infinite}
+.blood-admin-hero{background:linear-gradient(135deg,#be123c,#e11d48);border-radius:18px;padding:26px 28px;color:#fff;margin-bottom:24px;display:flex;align-items:center;gap:18px}
+.blood-tab{position:relative}
+@media(max-width:768px){.blood-action-grid{grid-template-columns:1fr}}
+
+/* ─── AI PRESCRIPTION READER ─────────────────────────────── */
+.rx-hero{background:linear-gradient(135deg,#1e40af,#4f46e5,#7c3aed);border-radius:18px;padding:26px 28px;color:#fff;margin-bottom:24px;display:flex;align-items:center;gap:18px}
+.rx-hero-icon{font-size:44px;flex-shrink:0;animation:bounce 2s ease-in-out infinite}
+.rx-hero h2{font-family:'Syne',sans-serif;font-size:21px;font-weight:800;margin-bottom:4px}
+.rx-hero p{color:rgba(255,255,255,.75);font-size:13px;line-height:1.6}
+.rx-input-tabs{display:flex;gap:6px;background:var(--surface);padding:4px;border-radius:12px;margin-bottom:20px;width:fit-content}
+.rx-tab{padding:8px 20px;border-radius:9px;border:none;background:transparent;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.rx-tab.active{background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+.rx-drop-zone{border:2px dashed rgba(79,70,229,.35);border-radius:16px;padding:48px 24px;text-align:center;cursor:pointer;transition:all .25s;background:rgba(79,70,229,.03)}
+.rx-drop-zone:hover{border-color:var(--accent2);background:rgba(79,70,229,.07);transform:translateY(-2px)}
+.rx-drop-icon{font-size:48px;margin-bottom:14px}
+.rx-drop-zone h4{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--ink);margin-bottom:6px}
+.rx-drop-zone p{font-size:13px;color:var(--muted)}
+.btn-rx-analyze{display:inline-flex;align-items:center;gap:8px;padding:12px 26px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;border-radius:11px;font-size:14px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .2s}
+.btn-rx-analyze:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(79,70,229,.35)}
+.rx-loading-card{background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:36px;text-align:center;margin-top:20px;box-shadow:var(--shadow)}
+.rx-loading-icon{font-size:52px;margin-bottom:14px;animation:bounce 1s ease-in-out infinite}
+.rx-loading-card h4{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:6px}
+.rx-loading-card p{font-size:13px;color:var(--muted);margin-bottom:20px}
+.rx-loading-bar{background:rgba(79,70,229,.1);border-radius:100px;height:6px;overflow:hidden}
+.rx-loading-fill{height:100%;background:linear-gradient(90deg,#4f46e5,#7c3aed);border-radius:100px;animation:rx-progress 2s ease-in-out infinite}
+@keyframes rx-progress{0%{width:0%;margin-left:0}50%{width:70%;margin-left:0}100%{width:100%;margin-left:0}}
+.rx-result-header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-top:24px;margin-bottom:16px;flex-wrap:wrap}
+.rx-result-header h3{font-family:'Syne',sans-serif;font-size:18px;font-weight:800}
+.rx-summary-card{background:linear-gradient(135deg,rgba(79,70,229,.06),rgba(124,58,237,.06));border:1.5px solid rgba(79,70,229,.2);border-radius:14px;padding:18px 20px;font-size:14px;line-height:1.8;color:var(--ink)}
+.rx-medicine-card{background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:12px;transition:box-shadow .2s}
+.rx-medicine-card:hover{box-shadow:var(--shadow)}
+.rx-med-top{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.rx-med-icon{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,rgba(79,70,229,.1),rgba(124,58,237,.1));display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.rx-med-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:var(--ink)}
+.rx-med-type{font-size:11px;color:var(--muted);margin-top:2px}
+.rx-med-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:12px}
+.rx-med-detail{background:var(--surface);border-radius:9px;padding:10px 13px}
+.rx-med-detail-label{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.rx-med-detail-val{font-size:13px;font-weight:600;color:var(--ink)}
+.rx-med-purpose{font-size:13px;color:var(--muted);line-height:1.6;padding-top:10px;border-top:1px solid var(--border)}
+.rx-med-warning{background:rgba(217,119,6,.07);border:1px solid rgba(217,119,6,.2);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--amber);margin-top:10px;font-weight:600}
+.rx-instructions-card{background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:18px 20px;font-size:14px;line-height:1.9;color:var(--ink)}
+.rx-disclaimer{background:rgba(217,119,6,.07);border:1.5px solid rgba(217,119,6,.2);border-radius:12px;padding:14px 18px;font-size:12px;color:var(--amber);margin-top:20px;line-height:1.6}
+@media(max-width:768px){.rx-hero{flex-direction:column;text-align:center}.rx-med-grid{grid-template-columns:1fr 1fr}}
+/* ─── AI CALL HEADER BUTTON ─────────────────────────────────── */
+#patient-call-btn-header:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,58,237,.4)}
+
+/* ─── BLOOD DONATION ENHANCED ───────────────────────────────── */
+.blood-hero-enhanced{position:relative;border-radius:20px;overflow:hidden;margin-bottom:28px;background:linear-gradient(135deg,#0f1729 0%,#1a2744 50%,#0f2a4a 100%);padding:36px}
+.blood-hero-bg-circles{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.bh-circle{position:absolute;border-radius:50%;background:rgba(56,189,248,.04)}
+.bh-c1{width:300px;height:300px;top:-80px;right:-60px}
+.bh-c2{width:200px;height:200px;bottom:-60px;left:10%}
+.blood-hero-content{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.blood-hero-left{flex:1;min-width:240px}
+.blood-hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(56,189,248,.12);backdrop-filter:blur(8px);border:1px solid rgba(56,189,248,.3);border-radius:100px;padding:5px 14px;font-size:12px;font-weight:700;color:#7dd3fc;letter-spacing:.5px;margin-bottom:14px}
+.blood-hero-left h2{font-family:'Syne',sans-serif;font-size:clamp(26px,4vw,38px);font-weight:800;color:#fff;line-height:1.1;letter-spacing:-1px;margin-bottom:12px}
+.blood-hero-left h2 span{color:#7dd3fc}
+.blood-hero-left p{color:rgba(255,255,255,.75);font-size:14px;line-height:1.7;margin-bottom:22px;max-width:380px}
+.blood-hero-stats{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.bh-stat{text-align:center}
+.bh-stat-num{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff}
+.bh-stat-label{font-size:11px;color:rgba(255,255,255,.6);font-weight:500;margin-top:2px}
+.bh-stat-div{width:1px;height:32px;background:rgba(255,255,255,.1)}
+.blood-hero-drop{flex-shrink:0;position:relative;display:flex;align-items:center;justify-content:center;width:110px;height:110px}
+.blood-drop-anim{font-size:72px;animation:dropBounce 2.5s ease-in-out infinite;position:relative;z-index:1;filter:drop-shadow(0 8px 24px rgba(0,0,0,.3))}
+@keyframes dropBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.blood-drop-rings{position:absolute;inset:-10px;border-radius:50%;border:2px solid rgba(255,255,255,.15);animation:ringPulse 2.5s ease-in-out infinite}
+@keyframes ringPulse{0%,100%{transform:scale(1);opacity:.4}50%{transform:scale(1.15);opacity:0}}
+
+/* ─── BLOOD ACTION CARDS V2 ─────────────────────────────────── */
+.blood-action-grid-v2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.blood-action-v2{background:#fff;border:2px solid var(--border);border-radius:14px;padding:16px 18px;cursor:pointer;transition:all .25s;display:flex;flex-direction:row;align-items:center;gap:14px;position:relative;overflow:hidden}
+.blood-action-v2::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:14px 14px 0 0;opacity:0;transition:opacity .25s}
+.donate-v2::after{background:linear-gradient(90deg,#38bdf8,#6366f1)}
+.search-v2::after{background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.blood-action-v2:hover{transform:translateY(-3px);box-shadow:0 12px 36px rgba(13,13,20,.1)}
+.blood-action-v2:hover::after{opacity:1}
+.donate-v2:hover{border-color:rgba(56,189,248,.4)}
+.search-v2:hover{border-color:rgba(37,99,235,.4)}
+.bav2-icon-wrap{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.donate-icon-wrap{background:linear-gradient(135deg,rgba(56,189,248,.1),rgba(99,102,241,.12))}
+.search-icon-wrap{background:linear-gradient(135deg,rgba(37,99,235,.1),rgba(124,58,237,.15))}
+.bav2-icon-wrap span{font-size:24px}
+.bav2-body{flex:1;min-width:0}
+.bav2-body h3{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--ink);margin-bottom:3px}
+.bav2-body p{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:8px}
+.bav2-chips{display:flex;flex-wrap:wrap;gap:4px}
+.bav2-chip{display:inline-flex;align-items:center;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:600;background:var(--surface);color:var(--muted);border:1px solid var(--border)}
+.bav2-cta{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:7px 14px;border-radius:100px;transition:all .2s;white-space:nowrap;flex-shrink:0}
+.donate-cta{background:rgba(225,29,72,.1);color:var(--rose)}
+.donate-v2:hover .donate-cta{background:#6366f1;color:#fff}
+.search-cta{background:rgba(37,99,235,.1);color:var(--accent)}
+.search-v2:hover .search-cta{background:var(--accent);color:#fff}
+
+/* ─── BLOOD TYPE GUIDE ──────────────────────────────────────── */
+.blood-type-guide{background:#fff;border:1.5px solid var(--border);border-radius:18px;padding:18px 20px;margin-bottom:24px;box-shadow:var(--shadow)}
+.btg-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:6px}
+.btg-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--ink)}
+.btg-sub{font-size:12px;color:var(--muted)}
+.btg-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}
+.btg-card{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 6px;text-align:center;transition:all .2s;cursor:default;min-width:0}
+.btg-card:hover{border-color:#6366f1;transform:translateY(-2px)}
+.btg-card.highlight-card{background:linear-gradient(135deg,rgba(99,102,241,.07),rgba(124,58,237,.09));border-color:rgba(99,102,241,.3)}
+.btg-type{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#6366f1;margin-bottom:3px}
+.btg-label{font-size:9px;color:var(--muted);line-height:1.3;font-weight:500}
+
+/* ─── RX MODE TOGGLE ────────────────────────────────────────── */
+.rx-mode-toggle-wrap{margin-bottom:24px}
+.rx-mode-toggle{display:grid;grid-template-columns:1fr 1fr;gap:0;background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:4px;overflow:hidden}
+.rx-mode-btn{display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:10px;border:none;background:transparent;cursor:pointer;transition:all .25s;font-family:'DM Sans',sans-serif;text-align:left;color:var(--muted)}
+.rx-mode-btn.active{background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+.rx-mode-icon{font-size:24px;flex-shrink:0}
+.rx-mode-text strong{display:block;font-size:14px;font-weight:700;color:inherit;margin-bottom:1px}
+.rx-mode-text small{display:block;font-size:11px;color:var(--muted)}
+.rx-mode-btn.active .rx-mode-text small{color:var(--muted)}
+
+/* ─── SCAN INFO BANNER ──────────────────────────────────────── */
+.scan-info-banner{display:flex;align-items:flex-start;gap:14px;background:linear-gradient(135deg,rgba(79,70,229,.07),rgba(124,58,237,.07));border:1.5px solid rgba(79,70,229,.2);border-radius:14px;padding:16px 18px;margin-bottom:20px;flex-wrap:wrap}
+.sib-icon{font-size:28px;flex-shrink:0;margin-top:2px}
+.sib-body{flex:1;min-width:180px}
+.sib-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--accent2);margin-bottom:5px}
+.sib-sub{font-size:13px;color:var(--muted);line-height:1.6}
+.sib-badge{display:inline-flex;align-items:center;padding:4px 12px;background:linear-gradient(135deg,#059669,#047857);color:#fff;border-radius:100px;font-size:10px;font-weight:800;letter-spacing:.8px;white-space:nowrap;align-self:center;flex-shrink:0}
+
+/* ─── SCAN TYPE GRID ────────────────────────────────────────── */
+.scan-type-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.scan-type-card{background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:16px 14px;text-align:center;cursor:pointer;transition:all .2s;position:relative}
+.scan-type-card.active{border-color:var(--accent2);background:rgba(124,58,237,.04)}
+.scan-type-card.coming{opacity:.7;cursor:default}
+.stc-icon{font-size:28px;margin-bottom:8px}
+.stc-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:4px}
+.stc-sub{font-size:11px;color:var(--muted);line-height:1.4;margin-bottom:10px}
+.stc-badge{display:inline-flex;padding:3px 10px;border-radius:100px;font-size:10px;font-weight:700}
+.stc-badge.available{background:rgba(5,150,105,.1);color:var(--green);border:1px solid rgba(5,150,105,.2)}
+.stc-badge.coming-soon{background:rgba(217,119,6,.1);color:var(--amber);border:1px solid rgba(217,119,6,.2)}
+
+/* ─── SCAN DROP ZONE ────────────────────────────────────────── */
+.scan-drop-zone{border:2px dashed rgba(124,58,237,.35);border-radius:16px;padding:40px 24px;text-align:center;cursor:pointer;transition:all .25s;background:rgba(124,58,237,.03);min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0}
+.scan-drop-zone:hover{border-color:var(--accent2);background:rgba(124,58,237,.07);transform:translateY(-2px)}
+.scan-drop-icon{font-size:48px;margin-bottom:12px}
+.scan-drop-zone h4{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:5px}
+.scan-drop-zone p{font-size:13px;color:var(--muted)}
+
+/* ─── SCAN ANALYZE BUTTON ───────────────────────────────────── */
+.btn-scan-analyze{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;border-radius:11px;font-size:14px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .2s}
+.btn-scan-analyze:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(79,70,229,.4)}
+
+/* ─── SCAN RESULT CARD — REDESIGN ───────────────────────────── */
+.scan-result-card{background:#fff;border:1.5px solid var(--border);border-radius:22px;overflow:hidden;margin-top:20px;box-shadow:0 8px 40px rgba(13,13,20,.08)}
+.src-header{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1.5px solid var(--border);flex-wrap:wrap;gap:10px;background:#fff}
+.src-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--ink)}
+.src-body{display:flex;flex-direction:column}
+
+/* Hero banner — dark gradient */
+.src-prediction-wrap{position:relative;overflow:hidden;padding:30px 28px;background:linear-gradient(135deg,#0f0c29 0%,#1e1b4b 55%,#2d2a6e 100%);display:flex;align-items:center;gap:22px}
+.src-prediction-wrap::before{content:'';position:absolute;top:-50px;right:-50px;width:180px;height:180px;border-radius:50%;background:rgba(167,139,250,.07);pointer-events:none}
+.src-prediction-wrap::after{content:'';position:absolute;bottom:-70px;left:20px;width:150px;height:150px;border-radius:50%;background:rgba(99,102,241,.05);pointer-events:none}
+.src-pred-icon-box{width:66px;height:66px;border-radius:18px;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0}
+.src-pred-icon{font-size:32px}
+.src-pred-text{flex:1;position:relative;z-index:1}
+.src-pred-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(167,139,250,.65);margin-bottom:6px}
+.src-pred-value{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:#fff;line-height:1.1;margin-bottom:10px}
+.src-pred-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:100px;font-size:11px;font-weight:700;background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.15)}
+
+/* Confidence row */
+.src-confidence-wrap{padding:20px 28px;border-bottom:1.5px solid var(--border);background:var(--surface)}
+.src-conf-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.src-conf-label{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+.src-conf-pct{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--ink);line-height:1}
+.src-conf-bar-wrap{width:100%}
+.src-conf-bar{width:100%;height:9px;background:rgba(79,70,229,.1);border-radius:100px;overflow:hidden}
+.src-conf-fill{height:100%;background:linear-gradient(90deg,#4f46e5,#7c3aed,#a855f7);border-radius:100px;transition:width 1.2s cubic-bezier(.4,0,.2,1);width:0}
+.src-conf-hint{font-size:11px;color:var(--muted);margin-top:5px}
+
+/* Detail / breakdown area */
+.src-all-predictions{padding:20px 28px}
+.src-disclaimer{margin:0 28px 22px;background:rgba(217,119,6,.06);border:1.5px solid rgba(217,119,6,.18);border-radius:12px;padding:11px 16px;font-size:11.5px;color:#b45309;line-height:1.6}
+
+/* Blood report condition cards — horizontal scroll on mobile */
+.blood-cond-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:18px}
+.blood-cond-card{border-radius:14px;padding:16px;border:1.5px solid;transition:transform .2s}
+.blood-cond-card:hover{transform:translateY(-2px)}
+.blood-cond-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px}
+.blood-cond-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--ink);line-height:1.2}
+.blood-sev-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:10px;font-weight:800;white-space:nowrap;flex-shrink:0}
+.blood-cond-desc{font-size:12.5px;color:var(--muted);line-height:1.55}
+.blood-rec-box{background:linear-gradient(135deg,rgba(79,70,229,.04),rgba(124,58,237,.04));border:1.5px solid rgba(79,70,229,.12);border-radius:14px;padding:16px 18px}
+.blood-rec-title{font-size:12px;font-weight:800;color:var(--ink);letter-spacing:.5px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.blood-rec-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid rgba(79,70,229,.07);font-size:13px;color:var(--ink);line-height:1.5}
+.blood-rec-item:last-child{border-bottom:none;padding-bottom:0}
+.blood-rec-arrow{color:#6366f1;font-weight:800;font-size:13px;flex-shrink:0;margin-top:1px}
+
+/* scan disclaimer legacy compat */
+.scan-disclaimer{background:rgba(217,119,6,.07);border:1.5px solid rgba(217,119,6,.2);border-radius:12px;padding:14px 18px;font-size:12px;color:var(--amber);margin-top:18px;line-height:1.6}
+
+/* ─── RESPONSIVE: BLOOD + SCAN ──────────────────────────────── */
+@media(max-width:640px){
+  .blood-action-grid-v2{grid-template-columns:1fr}
+  .blood-hero-enhanced{padding:24px 18px}
+  .rx-mode-toggle{grid-template-columns:1fr}
+  .scan-type-grid{grid-template-columns:1fr 1fr}
+  .btg-grid{grid-template-columns:repeat(4,1fr)}
+  .blood-hero-drop{display:none}
+  .bav2-cta{display:none}
+}
+
+/* ─── BLOOD REQUEST NOTIFICATION POPUP ──────────────────────── */
+.blood-notif-overlay{position:fixed;inset:0;background:rgba(13,13,20,.55);backdrop-filter:blur(6px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .25s ease}
+.blood-notif-popup{background:#fff;border-radius:20px;padding:28px;max-width:440px;width:100%;box-shadow:0 24px 80px rgba(13,13,20,.25);border:2px solid rgba(225,29,72,.2);animation:slideUp .3s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.bnp-header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.bnp-alert-icon{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,rgba(225,29,72,.1),rgba(190,18,60,.15));display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;animation:pulse 1.5s ease-in-out infinite}
+.bnp-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--ink);margin-bottom:3px}
+.bnp-subtitle{font-size:12px;color:var(--muted)}
+.bnp-blood-badge{display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#be123c,#e11d48);color:#fff;font-family:'Syne',sans-serif;font-size:22px;font-weight:900;margin:0 auto 16px;box-shadow:0 8px 24px rgba(225,29,72,.3)}
+.bnp-details{background:var(--surface);border-radius:12px;padding:14px 16px;margin-bottom:18px;font-size:13px;line-height:2;color:var(--ink)}
+.bnp-details strong{color:var(--rose)}
+.bnp-actions{display:flex;gap:10px}
+.bnp-btn-accept{flex:1;padding:12px;background:linear-gradient(135deg,var(--rose),#be123c);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.bnp-btn-accept:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(225,29,72,.35)}
+.bnp-btn-decline{flex:1;padding:12px;background:var(--surface);color:var(--muted);border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.bnp-btn-decline:hover{border-color:var(--ink);color:var(--ink)}
+
+/* ─── BLOOD REQUEST ACCEPTORS LIST ─────────────────────────── */
+.blood-acceptors-wrap{margin-top:10px}
+.blood-acceptor-item{display:flex;align-items:center;gap:10px;background:rgba(5,150,105,.06);border:1px solid rgba(5,150,105,.2);border-radius:10px;padding:10px 14px;margin-top:8px;font-size:13px}
+.blood-acceptor-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--green),#047857);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0}
+.blood-acceptor-name{font-weight:700;color:var(--ink)}
+.blood-acceptor-meta{font-size:11px;color:var(--muted)}
