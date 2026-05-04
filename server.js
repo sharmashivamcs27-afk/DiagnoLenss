@@ -2,6 +2,7 @@ const express    = require('express');
 const cors       = require('cors');
 const twilio     = require('twilio');
 const { google } = require('googleapis');
+const https      = require('https');
 
 const app    = express();
 const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
@@ -79,6 +80,27 @@ app.post('/save-to-sheets', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('Sheets error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── GAS Proxy — fixes CORS when browser calls Google Apps Script ──
+// Browser calls: GET /fetch-gas?action=getByUser&phone=...&email=...
+// Server forwards to GAS (server-to-server = no CORS issue)
+app.get('/fetch-gas', async (req, res) => {
+  const GAS_URL = process.env.GAS_URL ||
+    'https://script.google.com/macros/s/AKfycbzRGDpOPhb6ekTvjoUj4XVw6s-9FIieIEkj2seg2Sic3bpbP8XKyzqXy-iAB39rJIkOpw/exec';
+  const params  = new URLSearchParams(req.query).toString();
+  const fullUrl = `${GAS_URL}?${params}`;
+  try {
+    // Node fetch (built-in from Node 18+) — follows GAS redirects automatically
+    const gasRes = await fetch(fullUrl, { redirect: 'follow' });
+    const text   = await gasRes.text();
+    let parsed;
+    try { parsed = JSON.parse(text); } catch { parsed = []; }
+    res.json(parsed);
+  } catch (err) {
+    console.error('GAS proxy error:', err.message);
     res.status(500).json({ success: false, error: err.message });
   }
 });
